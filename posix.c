@@ -1,13 +1,19 @@
+#define _DEFAULT_SOURCE
+
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 #include <unistd.h>
 
 #include <stdio.h>
 
 #include "sock_udp.h"
+
+static int _bind_to_device(int fd, unsigned iface);
 
 int ipv6_addr_is_multicast(ipv6_addr_t* addr)
 {
@@ -39,6 +45,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
                     dst_addr->sin_addr.s_addr = endpoint->ipv4.addr;
                 }
                 else {
+                    puts("any");
                     dst_addr->sin_addr.s_addr = INADDR_ANY;
                 }
                 return 0;
@@ -111,6 +118,11 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
                    sizeof(ifindex));
     }
 
+    if ((dst->family == AF_INET) && (dst->ipv4.addr == INADDR_BROADCAST)) {
+        int enable = 1;
+        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable));
+    }
+
     if (src_port) {
         struct sockaddr_in6 src_addr;
         unsigned addr_len;
@@ -146,6 +158,10 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
         }
     }
 
+    if ((dst->family == AF_INET) && dst->ipv4.iface) {
+        _bind_to_device(fd, dst->ipv4.iface);
+    }
+
     size_t dst_addr_len = _addrlen(dst->family);
 
     if ((res = sendto(fd, data, len, 0, (struct sockaddr *)&dst_addr, dst_addr_len)) == -1) {
@@ -173,26 +189,30 @@ int sock_udp_init(sock_udp_t *sock, const udp_endpoint_t *src, const udp_endpoin
 
     if (src) {
         sock->family = src->family;
-        memset((void*)&src_addr, '\0', sizeof(src_addr));
-        _endpoint_to_sockaddr(&src_addr, src);
+    }
+    else {
+        sock->family = dst->family;
     }
 
-    if (dst) {
-        if (!src) {
-            sock->family = dst->family;
-        }
-        sock_udp_set_dst(sock, dst);
-    }
-
-    int fd = socket(sock->family, SOCK_DGRAM, 0);
-    if (fd == -1) {
+    sock->fd = socket(sock->family, SOCK_DGRAM, IPPROTO_IP);
+    if (sock->fd == -1) {
+        perror("creating socket");
         return -1;
     }
 
     if (src) {
+        sock->family = src->family;
+
+        memset((void*)&src_addr, '\0', sizeof(src_addr));
+        _endpoint_to_sockaddr(&src_addr, src);
+
         unsigned addr_len = _addrlen(sock->family);
 
-        if (bind(fd, (struct sockaddr *)&src_addr, addr_len) == -1) {
+        const int on=1;
+        setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+        setsockopt(sock->fd, SOL_IP, IP_TRANSPARENT, &on, sizeof(on));
+
+        if (bind(sock->fd, (struct sockaddr *)&src_addr, addr_len) == -1) {
             res = -1;
             perror("bind");
             goto close;
@@ -200,11 +220,19 @@ int sock_udp_init(sock_udp_t *sock, const udp_endpoint_t *src, const udp_endpoin
         sock->flags |= SOCK_UDP_LOCAL;
     }
 
-    sock->fd = fd;
+    if (dst) {
+        if (!src) {
+            sock->family = dst->family;
+        }
+        if ((res = sock_udp_set_dst(sock, dst))) {
+            goto close;
+        }
+    }
+
     return 0;
 
 close:
-    close(fd);
+    close(sock->fd);
 
     return res;
 }
@@ -216,22 +244,59 @@ void sock_udp_close(sock_udp_t *sock)
     }
 }
 
+static int _bind_to_device(int fd, unsigned iface)
+{
+    struct ifreq ifr;
+    memset(&ifr, '\0', sizeof(ifr));
+
+    if (iface) {
+        ifr.ifr_ifindex = iface;
+        if (ioctl(fd, SIOCGIFNAME, &ifr)==-1) {
+            puts("error getting ifname");
+            return -1;
+        }
+    }
+
+    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE,
+                (void *)&ifr, sizeof(ifr)) < 0) {
+        perror("error setting SO_BINDTODEVICE");
+        return -1;
+    }
+
+    return 0;
+}
+
 int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
 {
     assert(sock);
 
     if (!dst) {
+        puts("a");
         sock->flags &= ~SOCK_UDP_REMOTE;
         return 0;
     }
 
     if (sock->family != dst->family) {
+        puts("b");
         return -EINVAL;
     }
 
   /*  if (ipv6_addr_is_unspecified(dst->ipv6.addr)) {
         return -EINVAL;
     }*/
+
+    if (dst->family == AF_INET) {
+        if  (dst->ipv4.addr == 0xFFFFFFFF) {
+            int enable = 1;
+            if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) == -1) {
+                perror("enabling broadcast");
+            }
+        }
+
+        /* if an interface is specified, force it's usage.
+         * if dst->iface is 0, this will unbind. */
+        _bind_to_device(sock->fd, dst->ipv4.iface);
+    }
 
     memset((void*)&sock->peer, '\0', sizeof(struct sockaddr_in6));
     _endpoint_to_sockaddr(&sock->peer, dst);
@@ -247,9 +312,10 @@ ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len)
 
     /* can only send on sockets with target address */
     if (!(sock->flags & SOCK_UDP_REMOTE)) {
+        puts("c");
         return -EINVAL;
     }
-    printf("%u\n", sock->family);
+
     int res = sendto(sock->fd, data, len, 0, (struct sockaddr *)&sock->peer, _addrlen(sock->family));
     if (res==-1) {
         perror("sendto");

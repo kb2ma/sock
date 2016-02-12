@@ -10,6 +10,8 @@
 
 #include "sock_udp_linux.h"
 
+#define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | a)
+
 #define SOCK_UDP_LOCAL (0x1)
 #define SOCK_UDP_REMOTE (0x2)
 
@@ -21,6 +23,7 @@ typedef struct udp_endpoint6 {
 
 typedef struct udp_endpoint4 {
     uint16_t port;
+    uint16_t iface;
     ipv4_addr_t addr;
 } udp_endpoint4_t;
 
