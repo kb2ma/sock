@@ -27,7 +27,7 @@ int ipv6_addr_is_unspecified(ipv6_addr_t* addr)
 
 static int _addrlen(unsigned family) {
     return (family == AF_INET6) ?
-        sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in);
+        sizeof(sockaddr_t) : sizeof(struct sockaddr_in);
 }
 
 static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
@@ -36,6 +36,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
     assert(endpoint);
 
     switch(endpoint->family) {
+#if defined(SOCK_UDP_IPV4)
         case AF_INET:
             {
                 struct sockaddr_in *dst_addr = sockaddr;
@@ -50,9 +51,11 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
                 }
                 return 0;
             }
+#endif
+#if defined(SOCK_UDP_IPV6)
         case AF_INET6:
             {
-                struct sockaddr_in6 *dst_addr6 = /*(struct sockaddr_in6 *)*/ sockaddr;
+                sockaddr_t *dst_addr6 = /*(sockaddr_t *)*/ sockaddr;
                 dst_addr6->sin6_family = AF_INET6;
                 if (endpoint->ipv6.addr) {
                     memcpy(&dst_addr6->sin6_addr, endpoint->ipv6.addr, 16);
@@ -64,6 +67,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
                 dst_addr6->sin6_scope_id = endpoint->ipv6.iface;
                 return 0;
             }
+#endif
         default:
             return -EINVAL;
     }
@@ -76,6 +80,7 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
 
     struct sockaddr *sockaddr = _sockaddr;
     switch(sockaddr->sa_family) {
+#if defined(SOCK_UDP_IPV4)
         case AF_INET:
             {
                 struct sockaddr_in *addr = (struct sockaddr_in*) sockaddr;
@@ -84,15 +89,18 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
                 endpoint->ipv4.addr = addr->sin_addr.s_addr;
                 return 0;
             }
+#endif
+#if defined(SOCK_UDP_IPV6)
         case AF_INET6:
             {
-                struct sockaddr_in6 *addr = (struct sockaddr_in6*) sockaddr;
+                sockaddr_t *addr = (sockaddr_t*) sockaddr;
                 endpoint->family = AF_INET6;
                 endpoint->ipv6.port = ntohs(addr->sin6_port);
                 endpoint->ipv6.iface = addr->sin6_scope_id;
                 memcpy(endpoint->ipv6.addr, &addr->sin6_addr, 16);
                 return 0;
             }
+#endif
         default:
             return -EINVAL;
     }
@@ -101,7 +109,7 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
 ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len, uint16_t src_port)
 {
     ssize_t res;
-    struct sockaddr_in6 dst_addr = {0};
+    sockaddr_t dst_addr = {0};
     memset((void*)&dst_addr, '\0', sizeof(dst_addr));
     if (_endpoint_to_sockaddr(&dst_addr, dst)) {
         return -EINVAL;
@@ -112,22 +120,27 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
         return -1;
     }
 
+#if defined(SOCK_UDP_IPV6)
     if ((dst->family == AF_INET6) && ipv6_addr_is_multicast(dst->ipv6.addr)) {
         unsigned ifindex = dst->ipv6.iface;
         setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &ifindex,
                    sizeof(ifindex));
     }
+#endif
 
+#if defined(SOCK_UDP_IPV4)
     if ((dst->family == AF_INET) && (dst->ipv4.addr == INADDR_BROADCAST)) {
         int enable = 1;
         setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable));
     }
+#endif
 
     if (src_port) {
-        struct sockaddr_in6 src_addr;
+        sockaddr_t src_addr;
         unsigned addr_len;
         memset((void*)&src_addr, '\0', sizeof(src_addr));
         switch (dst->family) {
+#if defined(SOCK_UDP_IPV4)
             case AF_INET:
                 {
                     struct sockaddr_in *src_addr4 = (struct sockaddr_in *) &src_addr;
@@ -137,14 +150,17 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
                     addr_len = sizeof(struct sockaddr_in);
                     break;
                 }
+#endif
+#if defined(SOCK_UDP_IPV6)
             case AF_INET6:
                 {
                     src_addr.sin6_family = AF_INET6;
                     src_addr.sin6_port = htons(src_port);
                     src_addr.sin6_addr = in6addr_any;
-                    addr_len = sizeof(struct sockaddr_in6);
+                    addr_len = sizeof(sockaddr_t);
                     break;
                 }
+#endif
             default:
                 return -EINVAL;
         }
@@ -158,9 +174,11 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
         }
     }
 
+#if defined(SOCK_UDP_IPV4)
     if ((dst->family == AF_INET) && dst->ipv4.iface) {
         _bind_to_device(fd, dst->ipv4.iface);
     }
+#endif
 
     size_t dst_addr_len = _addrlen(dst->family);
 
@@ -177,7 +195,7 @@ close:
 int sock_udp_init(sock_udp_t *sock, const udp_endpoint_t *src, const udp_endpoint_t *dst)
 {
     int res;
-    struct sockaddr_in6 src_addr;
+    sockaddr_t src_addr;
 
     if (!(src || dst)) {
         return -EINVAL;
@@ -285,6 +303,7 @@ int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
         return -EINVAL;
     }*/
 
+#if defined(SOCK_UDP_IPV4)
     if (dst->family == AF_INET) {
         if  (dst->ipv4.addr == 0xFFFFFFFF) {
             int enable = 1;
@@ -297,8 +316,9 @@ int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
          * if dst->iface is 0, this will unbind. */
         _bind_to_device(sock->fd, dst->ipv4.iface);
     }
+#endif
 
-    memset((void*)&sock->peer, '\0', sizeof(struct sockaddr_in6));
+    memset((void*)&sock->peer, '\0', sizeof(sockaddr_t));
     _endpoint_to_sockaddr(&sock->peer, dst);
 
     sock->flags |= SOCK_UDP_REMOTE;
@@ -345,8 +365,8 @@ ssize_t sock_udp_recv(sock_udp_t *sock, void* buf, size_t len, unsigned timeout,
         }
     }
 
-    struct sockaddr_in6 sockaddr_remote = {0};
-    unsigned socklen;
+    sockaddr_t sockaddr_remote = {0};
+    unsigned socklen = sizeof(sockaddr_remote);
     ssize_t res = recvfrom(sock->fd, buf, len, 0, (struct sockaddr *)&sockaddr_remote, &socklen);
     if (remote && (res != -1)) {
         _sockaddr_to_endpoint(remote, &sockaddr_remote);
@@ -360,19 +380,29 @@ int sock_udp_fmt_endpoint(const udp_endpoint_t *endpoint, char *addr_str, uint16
     *addr_str = '\0';
 
     if (endpoint->family==AF_INET) {
+#if defined(SOCK_UDP_IPV4)
         addr_ptr = (void*)&endpoint->ipv4.addr;
+#else
+        return -ENOTSUP;
+#endif
     }
     else {
+#if defined(SOCK_UDP_IPV6)
         addr_ptr = endpoint->ipv6.addr;
+#else
+        return -ENOTSUP;
+#endif
     }
 
     if (!inet_ntop(endpoint->family, addr_ptr, addr_str, INET6_ADDRSTRLEN)) {
         return 0;
     }
 
+#if defined(SOCK_UDP_IPV6)
     if ((endpoint->family == AF_INET6) && endpoint->ipv6.iface) {
         sprintf(addr_str + strlen(addr_str), "%%%4u", endpoint->ipv6.iface);
     }
+#endif
 
     if (port) {
         *port = endpoint->ipv4.port;
