@@ -6,8 +6,12 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
-#include "net/ipv6/addr.h"
+#if ! (defined(SOCK_UDP_IPV4) || defined(SOCK_UDP_IPV6))
+#define SOCK_UDP_IPV4
+#define SOCK_UDP_IPV6
+#endif
 
+#include "net/ipv6/addr.h"
 #include "sock_udp_linux.h"
 
 #define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | a)
@@ -30,8 +34,12 @@ typedef struct udp_endpoint4 {
 typedef struct udp_endpoint {
     unsigned family;
     union {
+#if defined(SOCK_UDP_IPV6)
         udp_endpoint6_t ipv6;
+#endif
+#if defined(SOCK_UDP_IPV4)
         udp_endpoint4_t ipv4;
+#endif
     };
 } udp_endpoint_t;
 
