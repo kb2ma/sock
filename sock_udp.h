@@ -19,6 +19,8 @@
 #define SOCK_UDP_LOCAL (0x1)
 #define SOCK_UDP_REMOTE (0x2)
 
+#define SOCK_NO_TIMEOUT (0x0-1)
+
 typedef struct udp_endpoint6 {
     uint16_t port;
     uint16_t iface;

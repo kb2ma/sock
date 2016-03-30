@@ -332,7 +332,6 @@ ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len)
 
     /* can only send on sockets with target address */
     if (!(sock->flags & SOCK_UDP_REMOTE)) {
-        puts("c");
         return -EINVAL;
     }
 
@@ -352,7 +351,7 @@ ssize_t sock_udp_recv(sock_udp_t *sock, void* buf, size_t len, unsigned timeout,
     }
 
     fd_set _select_fds;
-    if (timeout != ((unsigned)-1)) {
+    if (timeout != SOCK_NO_TIMEOUT) {
         int activity;
         struct timeval _timeout = { .tv_usec=timeout };
 
