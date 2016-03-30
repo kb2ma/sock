@@ -1,7 +1,10 @@
+default.CC="gcc"
 default.CFLAGS = "-g -Os -Wall -std=c11 -I."
+#default.LINK="musl-gcc"
+#default.LINKFLAGS="-static"
 
-Main("sender", ["sender.c", "posix.c" ])
-Main("receiver", ["receiver.c", "posix.c" ])
+Main("echo_server", ["echo_server.c", "posix.c" ])
+Main("echo_client", ["echo_client.c", "posix.c" ])
 
 subinclude("ndhcp")
 
