@@ -7,5 +7,6 @@ Main("echo_server", ["echo_server.c", "posix.c" ])
 Main("echo_client", ["echo_client.c", "posix.c" ])
 
 subinclude("ndhcp")
+subinclude("nanocoap")
 
 set_clean_leftovers()
