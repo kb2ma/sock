@@ -20,7 +20,7 @@ int ipv6_addr_is_multicast(ipv6_addr_t* addr)
     return addr->addr[0] == 0xFF;
 }
 
-int ipv6_addr_is_unspecified(ipv6_addr_t* addr)
+int ipv6_addr_is_unspecified(const ipv6_addr_t* addr)
 {
     return memcmp(addr, &in6addr_any, 16) == 0;
 }
@@ -41,9 +41,9 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
             {
                 struct sockaddr_in *dst_addr = sockaddr;
                 dst_addr->sin_family = AF_INET;
-                dst_addr->sin_port = htons(endpoint->ipv4.port);
-                if (endpoint->ipv4.addr) {
-                    dst_addr->sin_addr.s_addr = endpoint->ipv4.addr;
+                dst_addr->sin_port = htons(endpoint->port);
+                if (endpoint->addr.ipv4) {
+                    dst_addr->sin_addr.s_addr = endpoint->addr.ipv4;
                 }
                 else {
                     puts("any");
@@ -57,14 +57,14 @@ static int _endpoint_to_sockaddr(void *sockaddr, const udp_endpoint_t *endpoint)
             {
                 sockaddr_t *dst_addr6 = /*(sockaddr_t *)*/ sockaddr;
                 dst_addr6->sin6_family = AF_INET6;
-                if (endpoint->ipv6.addr) {
-                    memcpy(&dst_addr6->sin6_addr, endpoint->ipv6.addr, 16);
+                if (ipv6_addr_is_unspecified(&endpoint->addr.ipv6)) {
+                    memcpy(&dst_addr6->sin6_addr, &endpoint->addr.ipv6, 16);
                 }
                 else {
                     dst_addr6->sin6_addr = in6addr_any;
                 }
-                dst_addr6->sin6_port = htons(endpoint->ipv6.port);
-                dst_addr6->sin6_scope_id = endpoint->ipv6.iface;
+                dst_addr6->sin6_port = htons(endpoint->port);
+                dst_addr6->sin6_scope_id = endpoint->iface;
                 return 0;
             }
 #endif
@@ -85,8 +85,8 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
             {
                 struct sockaddr_in *addr = (struct sockaddr_in*) sockaddr;
                 endpoint->family = AF_INET;
-                endpoint->ipv4.port = ntohs(addr->sin_port);
-                endpoint->ipv4.addr = addr->sin_addr.s_addr;
+                endpoint->port = ntohs(addr->sin_port);
+                endpoint->addr.ipv4 = addr->sin_addr.s_addr;
                 return 0;
             }
 #endif
@@ -95,9 +95,9 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
             {
                 sockaddr_t *addr = (sockaddr_t*) sockaddr;
                 endpoint->family = AF_INET6;
-                endpoint->ipv6.port = ntohs(addr->sin6_port);
-                endpoint->ipv6.iface = addr->sin6_scope_id;
-                memcpy(endpoint->ipv6.addr, &addr->sin6_addr, 16);
+                endpoint->port = ntohs(addr->sin6_port);
+                endpoint->iface = addr->sin6_scope_id;
+                memcpy(&endpoint->addr.ipv6, &addr->sin6_addr, 16);
                 return 0;
             }
 #endif
@@ -121,15 +121,15 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
     }
 
 #if defined(SOCK_UDP_IPV6)
-    if ((dst->family == AF_INET6) && ipv6_addr_is_multicast(dst->ipv6.addr)) {
-        unsigned ifindex = dst->ipv6.iface;
+    if ((dst->family == AF_INET6) && ipv6_addr_is_multicast(&dst->addr.ipv6)) {
+        unsigned ifindex = dst->iface;
         setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_IF, &ifindex,
                    sizeof(ifindex));
     }
 #endif
 
 #if defined(SOCK_UDP_IPV4)
-    if ((dst->family == AF_INET) && (dst->ipv4.addr == INADDR_BROADCAST)) {
+    if ((dst->family == AF_INET) && (dst->addr.ipv4 == INADDR_BROADCAST)) {
         int enable = 1;
         setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable));
     }
@@ -175,8 +175,8 @@ ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len,
     }
 
 #if defined(SOCK_UDP_IPV4)
-    if ((dst->family == AF_INET) && dst->ipv4.iface) {
-        _bind_to_device(fd, dst->ipv4.iface);
+    if ((dst->family == AF_INET) && dst->iface) {
+        _bind_to_device(fd, dst->iface);
     }
 #endif
 
@@ -305,7 +305,7 @@ int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
 
 #if defined(SOCK_UDP_IPV4)
     if (dst->family == AF_INET) {
-        if  (dst->ipv4.addr == 0xFFFFFFFF) {
+        if  (dst->addr.ipv4 == 0xFFFFFFFF) {
             int enable = 1;
             if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) == -1) {
                 perror("enabling broadcast");
@@ -314,7 +314,7 @@ int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
 
         /* if an interface is specified, force it's usage.
          * if dst->iface is 0, this will unbind. */
-        _bind_to_device(sock->fd, dst->ipv4.iface);
+        _bind_to_device(sock->fd, dst->iface);
     }
 #endif
 
@@ -380,14 +380,14 @@ int sock_udp_fmt_endpoint(const udp_endpoint_t *endpoint, char *addr_str, uint16
 
     if (endpoint->family==AF_INET) {
 #if defined(SOCK_UDP_IPV4)
-        addr_ptr = (void*)&endpoint->ipv4.addr;
+        addr_ptr = (void*)&endpoint->addr.ipv4;
 #else
         return -ENOTSUP;
 #endif
     }
     else {
 #if defined(SOCK_UDP_IPV6)
-        addr_ptr = endpoint->ipv6.addr;
+        addr_ptr = (void*)&endpoint->addr.ipv6;
 #else
         return -ENOTSUP;
 #endif
@@ -398,13 +398,13 @@ int sock_udp_fmt_endpoint(const udp_endpoint_t *endpoint, char *addr_str, uint16
     }
 
 #if defined(SOCK_UDP_IPV6)
-    if ((endpoint->family == AF_INET6) && endpoint->ipv6.iface) {
-        sprintf(addr_str + strlen(addr_str), "%%%4u", endpoint->ipv6.iface);
+    if ((endpoint->family == AF_INET6) && endpoint->iface) {
+        sprintf(addr_str + strlen(addr_str), "%%%4u", endpoint->iface);
     }
 #endif
 
     if (port) {
-        *port = endpoint->ipv4.port;
+        *port = endpoint->port;
     }
 
     return strlen(addr_str);

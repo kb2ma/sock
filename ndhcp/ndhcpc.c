@@ -17,8 +17,8 @@ int ndhcpc_init(ndhcpc_t *n, unsigned iface, uint32_t xid)
     n->iface = iface;
     n->xid = htonl(xid);
 
-    udp_endpoint_t src = { .family = AF_INET, .ipv4.addr=INADDR_ANY, .ipv4.port=68 };
-    udp_endpoint_t dst = { .family = AF_INET, .ipv4.addr=INADDR_BROADCAST, .ipv4.port=67, .ipv4.iface=iface };
+    udp_endpoint_t src = { .family = AF_INET, .addr.ipv4=INADDR_ANY, .port=68 };
+    udp_endpoint_t dst = { .family = AF_INET, .addr.ipv4=INADDR_BROADCAST, .port=67, .iface=iface };
 
     if (sock_udp_init(&n->sock, &src, &dst) < 0) {
         fprintf(stderr, "ndhcpc: error creating socket.\n");
@@ -97,6 +97,7 @@ static void _receive(ndhcpc_t *n, uint8_t *buf, size_t len)
     ssize_t res = sock_udp_recv(&n->sock, buf, len, 1000000, &remote);
     if (res < DHCP_OFFER_MINLEN) {
         puts("e minlen");
+        printf("%zi\n", res);
         return;
     }
 

@@ -21,28 +21,18 @@
 
 #define SOCK_NO_TIMEOUT (0x0-1)
 
-typedef struct udp_endpoint6 {
-    uint16_t port;
-    uint16_t iface;
-    ipv6_addr_t *addr;
-} udp_endpoint6_t;
-
-typedef struct udp_endpoint4 {
-    uint16_t port;
-    uint16_t iface;
-    ipv4_addr_t addr;
-} udp_endpoint4_t;
-
 typedef struct udp_endpoint {
-    unsigned family;
+    uint16_t family;
+    uint16_t port;
+    uint16_t iface;
     union {
 #if defined(SOCK_UDP_IPV6)
-        udp_endpoint6_t ipv6;
+        ipv6_addr_t ipv6;
 #endif
 #if defined(SOCK_UDP_IPV4)
-        udp_endpoint4_t ipv4;
+        ipv4_addr_t ipv4;
 #endif
-    };
+    } addr;
 } udp_endpoint_t;
 
 typedef struct sock_udp sock_udp_t;

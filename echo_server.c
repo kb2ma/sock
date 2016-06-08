@@ -11,9 +11,8 @@ int main(int argc, char *argv[])
     char buf[128];
 
     sock_udp_t sock;
-    udp_endpoint_t local = { .family=AF_INET6, .ipv6.port=60001 };
-    ipv6_addr_t remote_addr;
-    udp_endpoint_t remote = { .ipv6.addr=&remote_addr };
+    udp_endpoint_t local = { .family=AF_INET6, .port=60001 };
+    udp_endpoint_t remote = { 0 };
 
     ssize_t res = sock_udp_init(&sock, &local, NULL);
     if (res == -1) {
