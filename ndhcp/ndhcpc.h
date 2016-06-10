@@ -49,7 +49,7 @@ typedef struct {
 } ndhcpc_t;
 
 int ndhcpc_init(ndhcpc_t *ndhcpc, unsigned iface, uint32_t xid);
-int ndhcpc_work(ndhcpc_t *ndhcpc);
+int ndhcpc_loop(ndhcpc_t *ndhcpc);
 
 int ndhcpc_get_l2addr(unsigned iface, uint8_t *dst);
 void ndhcpc_handle_lease(dhcp_lease_t *lease);

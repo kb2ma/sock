@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     ndhcpc_t ndhcpc;
     ndhcpc_init(&ndhcpc, ifindex, 0x12345678);
-    ndhcpc_work(&ndhcpc);
+    ndhcpc_loop(&ndhcpc);
 
     return 0;
 }

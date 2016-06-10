@@ -171,7 +171,7 @@ static void _handle_ack(uint8_t *buf, size_t res)
     ndhcpc_handle_lease(&lease);
 }
 
-int ndhcpc_work(ndhcpc_t *n)
+int ndhcpc_loop(ndhcpc_t *n)
 {
     uint8_t buf[512];
     int t = 0;
