@@ -291,13 +291,11 @@ int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst)
     assert(sock);
 
     if (!dst) {
-        puts("a");
         sock->flags &= ~SOCK_UDP_REMOTE;
         return 0;
     }
 
     if (sock->family != dst->family) {
-        puts("b");
         return -EINVAL;
     }
 
