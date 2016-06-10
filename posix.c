@@ -106,7 +106,7 @@ static int _sockaddr_to_endpoint(udp_endpoint_t *endpoint, void *_sockaddr)
     }
 }
 
-ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len, uint16_t src_port)
+ssize_t sock_udp_sendx(const udp_endpoint_t *dst, const void* data, size_t len, uint16_t src_port)
 {
     ssize_t res;
     sockaddr_t dst_addr = {0};
@@ -336,6 +336,28 @@ ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len)
     }
 
     int res = sendto(sock->fd, data, len, 0, (struct sockaddr *)&sock->peer, _addrlen(sock->family));
+    if (res==-1) {
+        perror("sendto");
+    }
+
+    return res;
+}
+
+ssize_t sock_udp_sendto(sock_udp_t *sock, const udp_endpoint_t *dst, const void* data, size_t len)
+{
+    assert(sock);
+    assert(dst);
+
+    sockaddr_t remote;
+
+    /* cannot send on sockets with target address set */
+    if ((sock->flags & SOCK_UDP_REMOTE)) {
+        return -EINVAL;
+    }
+
+    _endpoint_to_sockaddr(&remote, dst);
+
+    int res = sendto(sock->fd, data, len, 0, (struct sockaddr *)&remote, _addrlen(sock->family));
     if (res==-1) {
         perror("sendto");
     }

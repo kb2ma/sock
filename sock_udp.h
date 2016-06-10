@@ -37,11 +37,11 @@ typedef struct udp_endpoint {
 
 typedef struct sock_udp sock_udp_t;
 
-ssize_t sock_udp_sendto(const udp_endpoint_t *dst, const void* data, size_t len, uint16_t src_port);
 int sock_udp_init(sock_udp_t *sock, const udp_endpoint_t *local, const udp_endpoint_t *remote);
-int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *dst);
-ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len);
+int sock_udp_set_dst(sock_udp_t *sock, const udp_endpoint_t *remote);
 ssize_t sock_udp_recv(sock_udp_t *sock, void* buf, size_t len, unsigned timeout, udp_endpoint_t *remote);
+ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len);
+ssize_t sock_udp_sendto(sock_udp_t *sock, const udp_endpoint_t *dst, const void* data, size_t len);
 void sock_udp_close(sock_udp_t *sock);
 int sock_udp_fmt_endpoint(const udp_endpoint_t *endpoint, char *addr_str, uint16_t *port);
 

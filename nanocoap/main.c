@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
             coap_pkt_t pkt;
             coap_parse(&pkt, (uint8_t*)buf, res);
             if ((res = coap_handle_req(&pkt, buf, sizeof(buf))) > 0) {
-                res = sock_udp_sendto(&remote, buf, res, COAP_PORT);
+                res = sock_udp_sendto(&sock, &remote, buf, res);
                 printf("%zi\n", res);
             }
         }

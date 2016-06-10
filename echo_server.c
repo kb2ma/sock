@@ -28,8 +28,7 @@ int main(int argc, char *argv[])
         else {
             buf[res] = '\0';
             printf("res=%zu text=\"%s\"\n", res, buf);
-            sock_udp_set_dst(&sock, &remote);
-            sock_udp_send(&sock, buf, res);
+            sock_udp_sendto(&sock, &remote, buf, res);
         }
     }
 
