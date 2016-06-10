@@ -194,6 +194,8 @@ close:
 
 int sock_udp_init(sock_udp_t *sock, const udp_endpoint_t *src, const udp_endpoint_t *dst)
 {
+    memset(sock, 0, sizeof(sock_udp_t));
+
     int res;
     sockaddr_t src_addr;
 
