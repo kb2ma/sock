@@ -11,8 +11,9 @@
 #define SOCK_UDP_IPV6
 #endif
 
-#include "net/ipv6/addr.h"
+#ifdef LINUX
 #include "sock_udp_linux.h"
+#endif
 
 #define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | a)
 
@@ -20,6 +21,12 @@
 #define SOCK_UDP_REMOTE (0x2)
 
 #define SOCK_NO_TIMEOUT (0x0-1)
+
+typedef struct {
+    uint8_t addr[16];
+} ipv6_addr_t;
+
+typedef uint32_t ipv4_addr_t;
 
 typedef struct udp_endpoint {
     uint16_t family;

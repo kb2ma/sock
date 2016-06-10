@@ -1,1 +1,1 @@
-Main("ndhcpc", glob.glob("*.c") + ["../posix.c"])
+Main("ndhcpc", glob.glob("*.c") + ["../src/posix/posix.c"])
