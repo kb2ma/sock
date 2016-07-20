@@ -135,9 +135,10 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
     if (payload_len) {
         rbuf += len;
         /* insert end of option marker */
-        *rbuf++ = 0xFF;
-        if (payload != rbuf) {
-            memcpy(rbuf + len, payload, payload_len);
+        *rbuf = 0xFF;
+        if (payload) {
+            rbuf++;
+            memcpy(rbuf, payload, payload_len);
         }
         len += payload_len +1;
     }

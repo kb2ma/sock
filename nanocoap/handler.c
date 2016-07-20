@@ -40,5 +40,5 @@ extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t le
 
     unsigned payload_len = bufpos - payload;
 
-    return coap_build_reply(pkt, COAP_CODE_205, buf, len, payload, payload_len);
+    return coap_build_reply(pkt, COAP_CODE_205, buf, len, NULL, payload_len);
 }
