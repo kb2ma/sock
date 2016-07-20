@@ -15,7 +15,7 @@
 #include "sock_udp_linux.h"
 #endif
 
-#define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | a)
+#define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | d)
 
 #define SOCK_UDP_LOCAL (0x1)
 #define SOCK_UDP_REMOTE (0x2)
