@@ -11,10 +11,6 @@
 #define SOCK_UDP_IPV6
 #endif
 
-#ifdef LINUX
-#include "sock_udp_linux.h"
-#endif
-
 #define IP4(a,b,c,d) (uint32_t)((a<<24) | b<<16 | c<<8 | d)
 
 #define SOCK_UDP_LOCAL (0x1)
@@ -51,5 +47,9 @@ ssize_t sock_udp_send(sock_udp_t *sock, const void* data, size_t len);
 ssize_t sock_udp_sendto(sock_udp_t *sock, const udp_endpoint_t *dst, const void* data, size_t len);
 void sock_udp_close(sock_udp_t *sock);
 int sock_udp_fmt_endpoint(const udp_endpoint_t *endpoint, char *addr_str, uint16_t *port);
+
+#ifdef LINUX
+#include "sock_udp_linux.h"
+#endif
 
 #endif /* SOCK_UDP__ */
