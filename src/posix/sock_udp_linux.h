@@ -1,4 +1,6 @@
-#if defined(SOCK_UDP_IPV6)
+#include <arpa/inet.h>
+
+#if defined(SOCK_HAS_IPV6)
     typedef struct sockaddr_in6 sockaddr_t;
 #else
     typedef struct sockaddr_in sockaddr_t;
@@ -10,3 +12,4 @@ struct sock_udp {
     unsigned family;
     sockaddr_t peer;
 };
+int sock_udp_fmt_endpoint(const sock_udp_ep_t *endpoint, char *addr_str, uint16_t *port);

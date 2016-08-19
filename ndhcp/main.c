@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "sock_udp.h"
+#include "net/sock/udp.h"
 #include "ndhcpc.h"
 
 int main(int argc, char *argv[])

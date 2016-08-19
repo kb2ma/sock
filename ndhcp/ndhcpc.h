@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "sock_udp.h"
+#include "net/sock/udp.h"
 
 enum {
     DHCP_STATE_DISCOVER,

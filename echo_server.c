@@ -4,17 +4,17 @@
 #include <net/if.h>
 #include <unistd.h>
 
-#include "sock_udp.h"
+#include "net/sock/udp.h"
 
 int main(int argc, char *argv[])
 {
     char buf[128];
 
     sock_udp_t sock;
-    udp_endpoint_t local = { .family=AF_INET6, .port=60001 };
-    udp_endpoint_t remote = { 0 };
+    sock_udp_ep_t local = { .family=AF_INET6, .port=60001 };
+    sock_udp_ep_t remote = { 0 };
 
-    ssize_t res = sock_udp_init(&sock, &local, NULL);
+    ssize_t res = sock_udp_create(&sock, &local, NULL, 0);
     if (res == -1) {
         return -1;
     }
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
         else {
             buf[res] = '\0';
             printf("res=%zu text=\"%s\"\n", res, buf);
-            sock_udp_sendto(&sock, &remote, buf, res);
+            sock_udp_send(&sock, buf, res, &remote);
         }
     }
 

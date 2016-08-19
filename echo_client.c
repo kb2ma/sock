@@ -4,7 +4,7 @@
 #include <net/if.h>
 #include <unistd.h>
 
-#include "sock_udp.h"
+#include "net/sock/udp.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,17 +19,17 @@ int main(int argc, char *argv[])
     }
 
     sock_udp_t sock;
-    udp_endpoint_t local = { .family=AF_INET6 };
-    udp_endpoint_t remote = { .family=AF_INET6, .port=60001 };
+    sock_udp_ep_t local = { .family=AF_INET6 };
+    sock_udp_ep_t remote = { .family=AF_INET6, .port=60001 };
 
-    remote.addr.ipv6.addr[15] = 0x1; /* ::1 */
+    remote.addr.ipv6.u8[15] = 0x1; /* ::1 */
 
-    ssize_t res = sock_udp_init(&sock, &local, &remote);
+    ssize_t res = sock_udp_create(&sock, &local, &remote, 0);
     if (res == -1) {
         return -1;
     }
 
-    res = sock_udp_send(&sock, buf, strlen(buf));
+    res = sock_udp_send(&sock, buf, strlen(buf), NULL);
     if (res == -1) {
         perror("recv");
         return -1;
