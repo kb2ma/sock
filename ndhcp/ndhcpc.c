@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "ndhcpc.h"
-#include "sock_udp.h"
+#include "net/sock/udp.h"
 
 #define DHCP_OFFER_MINLEN (48+192+4)
 #define DHCP_MAGIC_COOKIE (0x63825363)
@@ -17,10 +17,10 @@ int ndhcpc_init(ndhcpc_t *n, unsigned iface, uint32_t xid)
     n->iface = iface;
     n->xid = htonl(xid);
 
-    udp_endpoint_t src = { .family = AF_INET, .addr.ipv4=INADDR_ANY, .port=68 };
-    udp_endpoint_t dst = { .family = AF_INET, .addr.ipv4=INADDR_BROADCAST, .port=67, .iface=iface };
+    sock_udp_ep_t src = { .family = AF_INET, .addr.ipv4=INADDR_ANY, .port=68 };
+    sock_udp_ep_t dst = { .family = AF_INET, .addr.ipv4=INADDR_BROADCAST, .port=67, .netif=iface };
 
-    if (sock_udp_init(&n->sock, &src, &dst) < 0) {
+    if (sock_udp_create(&n->sock, &src, &dst, 0) < 0) {
         fprintf(stderr, "ndhcpc: error creating socket.\n");
         exit(0);
     }
@@ -55,7 +55,7 @@ static void _send_discover(ndhcpc_t *n, uint8_t *buf, size_t len, unsigned secs)
     dhcp_pkt_t *pkt = (dhcp_pkt_t *)buf;
     const uint8_t _discover[] = {0x35, 0x01, 0x01, 0xff };
     memcpy(pkt->hdr_end, _discover, 4);
-    ssize_t res = sock_udp_send(&n->sock, buf, sizeof(dhcp_pkt_t)+4);
+    ssize_t res = sock_udp_send(&n->sock, buf, sizeof(dhcp_pkt_t)+4, NULL);
     printf("_send_discover(): res=%zi\n", res);
 }
 
@@ -87,13 +87,13 @@ static void _send_request(ndhcpc_t *n, uint8_t *buf, size_t len)
     /* end of options */
     *opt_pos++ = 0xff;
 
-    ssize_t res = sock_udp_send(&n->sock, buf, opt_pos-buf);
+    ssize_t res = sock_udp_send(&n->sock, buf, opt_pos-buf, NULL);
     printf("_send_request(): res=%zi\n", res);
 }
 
 static void _receive(ndhcpc_t *n, uint8_t *buf, size_t len)
 {
-    udp_endpoint_t remote;
+    sock_udp_ep_t remote;
     ssize_t res = sock_udp_recv(&n->sock, buf, len, 1000000, &remote);
     if (res < DHCP_OFFER_MINLEN) {
         puts("e minlen");
@@ -106,7 +106,7 @@ static void _receive(ndhcpc_t *n, uint8_t *buf, size_t len)
         puts("e op_htype_hlen_hops");
         return;
     }
-    if ((pkt->xid != pkt->xid)) {
+    if ((pkt->xid != n->xid)) {
         puts("e xid");
         return;
     }
