@@ -54,6 +54,8 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen,
         uint8_t *payload, unsigned payload_len);
 
+ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_len);
+
 static inline unsigned coap_get_ver(coap_pkt_t *pkt)
 {
     return (pkt->hdr->ver_t_tkl & 0x60) >> 6;
