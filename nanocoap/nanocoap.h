@@ -101,7 +101,9 @@ static inline void coap_hdr_set_code(coap_hdr_t *hdr, uint8_t code)
 
 static inline void coap_hdr_set_type(coap_hdr_t *hdr, unsigned type)
 {
+    /* assert correct range of type */
     assert(!(type & ~0x3));
+
     hdr->ver_t_tkl &= ~0x30;
     hdr->ver_t_tkl |= type << 4;
 }
