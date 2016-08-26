@@ -6,21 +6,28 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define COAP_PORT           (5683)
-#define NANOCOAP_URL_MAX    (64)
+#define COAP_PORT               (5683)
+#define NANOCOAP_URL_MAX        (64)
 
-#define COAP_OPT_URL        (11)
+#define COAP_OPT_URL            (11)
+#define COAP_OPT_CT             (12)
 
-#define COAP_REQ            (0)
-#define COAP_RESP           (2)
+#define COAP_REQ                (0)
+#define COAP_RESP               (2)
 
-#define COAP_METHOD_GET     (1)
-#define COAP_METHOD_POST    (2)
-#define COAP_METHOD_PUT     (3)
-#define COAP_METHOD_DELETE  (4)
+#define COAP_METHOD_GET         (1)
+#define COAP_METHOD_POST        (2)
+#define COAP_METHOD_PUT         (3)
+#define COAP_METHOD_DELETE      (4)
 
-#define COAP_CODE_205       ((2<<5) | 5)
-#define COAP_CODE_404       ((4<<5) | 4)
+#define COAP_CODE_205           ((2<<5) | 5)
+#define COAP_CODE_404           ((4<<5) | 4)
+
+#define COAP_CT_LINK_FORMAT     (40)
+#define COAP_CT_XML             (41)
+#define COAP_CT_OCTET_STREAM    (42)
+#define COAP_CT_EXI             (47)
+#define COAP_CT_JSON            (50)
 
 typedef struct {
     uint8_t ver_t_tkl;
@@ -51,10 +58,11 @@ extern const unsigned nanocoap_endpoints_numof;
 
 int coap_parse(coap_pkt_t* pkt, uint8_t *buf, size_t len);
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
-        uint8_t *rbuf, unsigned rlen,
-        uint8_t *payload, unsigned payload_len);
+        uint8_t *rbuf, unsigned rlen, unsigned payload_len);
 
 ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_len);
+size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *odata, size_t olen);
+size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type);
 
 static inline unsigned coap_get_ver(coap_pkt_t *pkt)
 {

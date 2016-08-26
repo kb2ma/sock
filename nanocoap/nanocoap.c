@@ -115,12 +115,11 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
         }
     }
 
-    return coap_build_reply(pkt, COAP_CODE_404, resp_buf, resp_buf_len, NULL, 0);
+    return coap_build_reply(pkt, COAP_CODE_404, resp_buf, resp_buf_len, 0);
 }
 
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
-        uint8_t *rbuf, unsigned rlen,
-        uint8_t *payload, unsigned payload_len)
+        uint8_t *rbuf, unsigned rlen, unsigned payload_len)
 {
     unsigned len = sizeof(coap_hdr_t) + coap_get_token_len(pkt);
     if ((len + payload_len + 1) > rlen) {
@@ -132,16 +131,7 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
     coap_hdr_set_type((coap_hdr_t*)rbuf, COAP_RESP);
     coap_hdr_set_code((coap_hdr_t*)rbuf, code);
 
-    if (payload_len) {
-        rbuf += len;
-        /* insert end of option marker */
-        *rbuf = 0xFF;
-        if (payload) {
-            rbuf++;
-            memcpy(rbuf, payload, payload_len);
-        }
-        len += payload_len +1;
-    }
+    len += payload_len;
 
     return len;
 }
@@ -207,4 +197,48 @@ static int _decode_value(unsigned val, uint8_t **pkt_pos_ptr, uint8_t *pkt_end)
 
     *pkt_pos_ptr = pkt_pos;
     return res;
+}
+
+unsigned coap_put_odelta(uint8_t *buf, unsigned lastonum, unsigned onum, unsigned olen)
+{
+    unsigned delta = onum - lastonum;
+    if (delta < 13) {
+        *buf = (uint8_t) ((delta << 4) | olen);
+        return 1;
+    } else if (delta == 13) {
+        *buf++ = (uint8_t) ((13 << 4) | olen);
+        *buf = delta - 13;
+        return 2;
+    } else {
+        *buf++ = (uint8_t) ((14 << 4) | olen);
+        uint16_t tmp = delta - 269;
+        tmp = htons(tmp);
+        memcpy(buf, &tmp, 2);
+        return 3;
+    }
+}
+
+size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *odata, size_t olen)
+{
+    assert(lastonum < onum);
+    int n = coap_put_odelta(buf, lastonum, onum, olen);
+    if(olen) {
+        memcpy(buf + n, odata, olen);
+        n += olen;
+    }
+    return n;
+}
+
+size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type)
+{
+    if (!content_type) {
+        return 0;
+    }
+    if (content_type <= 255) {
+        uint8_t tmp = content_type;
+        return coap_put_option(buf, lastonum, COAP_OPT_CT, &tmp, sizeof(tmp));
+    }
+    else {
+        return coap_put_option(buf, lastonum, COAP_OPT_CT, (uint8_t*)&content_type, sizeof(content_type));
+    }
 }
