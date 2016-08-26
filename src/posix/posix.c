@@ -19,12 +19,12 @@
 static int _bind_to_device(int fd, unsigned netif);
 static int _set_remote(sock_udp_t *sock, const sock_udp_ep_t *dst);
 
-int ipv6_addr_is_multicast(sock_addr_ipv6_t* addr)
+int ipv6_addr_is_multicast(uint8_t addr[16])
 {
-    return addr->u8[0] == 0xFF;
+    return *addr == 0xFF;
 }
 
-int ipv6_addr_is_unspecified(const sock_addr_ipv6_t* addr)
+int ipv6_addr_is_unspecified(const uint8_t addr[16])
 {
     return memcmp(addr, &in6addr_any, 16) == 0;
 }
@@ -60,8 +60,8 @@ static int _endpoint_to_sockaddr(void *sockaddr, const sock_udp_ep_t *endpoint)
             {
                 sockaddr_t *dst_addr6 = /*(sockaddr_t *)*/ sockaddr;
                 dst_addr6->sin6_family = AF_INET6;
-                if (ipv6_addr_is_unspecified(&endpoint->addr.ipv6)) {
-                    memcpy(&dst_addr6->sin6_addr, &endpoint->addr.ipv6, 16);
+                if (!ipv6_addr_is_unspecified(endpoint->addr.ipv6)) {
+                    memcpy(&dst_addr6->sin6_addr, endpoint->addr.ipv6, 16);
                 }
                 else {
                     dst_addr6->sin6_addr = in6addr_any;
@@ -100,7 +100,7 @@ static int _sockaddr_to_endpoint(sock_udp_ep_t *endpoint, void *_sockaddr)
                 endpoint->family = AF_INET6;
                 endpoint->port = ntohs(addr->sin6_port);
                 endpoint->netif = addr->sin6_scope_id;
-                memcpy(&endpoint->addr.ipv6, &addr->sin6_addr, 16);
+                memcpy(endpoint->addr.ipv6, &addr->sin6_addr, 16);
                 return 0;
             }
 #endif
@@ -109,7 +109,7 @@ static int _sockaddr_to_endpoint(sock_udp_ep_t *endpoint, void *_sockaddr)
     }
 }
 
-int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp_ep_t *remote, uint32_t flags)
+int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp_ep_t *remote, uint16_t flags)
 {
     (void)flags;
     memset(sock, 0, sizeof(sock_udp_t));

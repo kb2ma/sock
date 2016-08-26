@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     sock_udp_ep_t local = { .family=AF_INET6 };
     sock_udp_ep_t remote = { .family=AF_INET6, .port=60001 };
 
-    remote.addr.ipv6.u8[15] = 0x1; /* ::1 */
+    remote.addr.ipv6[15] = 0x1; /* ::1 */
 
     ssize_t res = sock_udp_create(&sock, &local, &remote, 0);
     if (res == -1) {
