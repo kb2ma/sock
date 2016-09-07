@@ -29,6 +29,12 @@
 #define COAP_CT_EXI             (47)
 #define COAP_CT_JSON            (50)
 
+#define COAP_ACK_TIMEOUT        (2U)
+#define COAP_RANDOM_FACTOR      (1.5)
+#define COAP_MAX_RETRANSMIT     (4)
+#define COAP_NSTART             (1)
+#define COAP_DEFAULT_LEISURE    (5)
+
 typedef struct {
     uint8_t ver_t_tkl;
     uint8_t code;
@@ -42,7 +48,7 @@ typedef struct {
     uint8_t *token;
     uint8_t *payload;
     unsigned payload_len;
-    unsigned content_type;
+    uint16_t content_type;
 } coap_pkt_t;
 
 typedef ssize_t (*coap_handler_t)(coap_pkt_t* pkt, uint8_t *buf, size_t len);
@@ -61,8 +67,13 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen, unsigned payload_len);
 
 ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_len);
+
+ssize_t coap_build_hdr(coap_hdr_t *hdr, unsigned type, uint8_t *token, size_t token_len, unsigned code, uint16_t id);
 size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *odata, size_t olen);
 size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type);
+size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url);
+
+ssize_t coap_get(const char *url, uint8_t *buf, size_t len);
 
 static inline unsigned coap_get_ver(coap_pkt_t *pkt)
 {

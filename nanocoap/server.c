@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     uint8_t buf[128];
 
     sock_udp_t sock;
-    sock_udp_ep_t local = { .family=AF_INET6, .port=COAP_PORT };
+    sock_udp_ep_t local = { .port=COAP_PORT };
     sock_udp_ep_t remote = { 0 };
 
     ssize_t res = sock_udp_create(&sock, &local, NULL, 0);
@@ -34,13 +34,15 @@ int main(int argc, char *argv[])
             buf[res] = '\0';
             printf("recv %zi from %s port %u.\n", res, addr_str, remote.port);
             coap_pkt_t pkt;
-            coap_parse(&pkt, (uint8_t*)buf, res);
+            if (coap_parse(&pkt, (uint8_t*)buf, res) < 0) {
+                puts("error parsing packet");
+                continue;
+            }
             if ((res = coap_handle_req(&pkt, buf, sizeof(buf))) > 0) {
                 res = sock_udp_send(&sock, buf, res, &remote);
                 printf("%zi\n", res);
             }
         }
-        sleep(1);
     }
 
     return 0;

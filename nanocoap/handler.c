@@ -8,15 +8,15 @@ ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
     uint8_t *bufpos = buf + coap_get_total_hdr_len(pkt);
 
     printf("_test_handler()\n");
-    printf("coap pkt parsed. code=%u detail=%u payload_len=%u, 0x%02x\n",
+    printf("coap pkt parsed. code=%u detail=%u payload_len=%u, len=%u 0x%02x\n",
             coap_get_code_class(pkt),
             coap_get_code_detail(pkt),
-            pkt->payload_len, pkt->hdr->code);
+            pkt->payload_len, (unsigned)len, pkt->hdr->code);
 
     switch (coap_get_code_detail(pkt)) {
         case COAP_METHOD_GET:
             puts("get");
-            const char payload[] = "TEST";
+            const char payload[] = "1234";
             *bufpos++ = 0xff;
             memcpy(bufpos, payload, 4);
             return coap_build_reply(pkt, COAP_CODE_205, buf, len, 5);

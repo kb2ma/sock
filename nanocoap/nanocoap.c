@@ -50,7 +50,7 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
         uint8_t option_byte = *pkt_pos++;
         if (option_byte == 0xff) {
             pkt->payload = pkt_pos;
-            pkt->payload_len = buf + len - pkt_pos ;
+            pkt->payload_len = buf + len - pkt_pos;
             printf("payload len = %u\n", pkt->payload_len);
             break;
         }
@@ -70,14 +70,24 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
 
             switch (option_nr) {
                 case COAP_OPT_URL:
-                    {
-                        *urlpos++ = '/';
-                        memcpy(urlpos, pkt_pos, option_len);
-                        urlpos += option_len;
-                        break;
+                    *urlpos++ = '/';
+                    memcpy(urlpos, pkt_pos, option_len);
+                    urlpos += option_len;
+                    break;
+                case COAP_OPT_CT:
+                    if (option_len == 1) {
+                        pkt->content_type = *pkt_pos;
+                    } else {
+                        memcpy(&pkt->content_type, pkt_pos, 2);
+                        pkt->content_type = ntohs(pkt->content_type);
                     }
+                    break;
                 default:
-                    printf("nanocoap: unhandled option nr=%i len=%i\n", option_nr, option_len);
+                    printf("nanocoap: unhandled option nr=%i len=%i critical=%u\n", option_nr, option_len, option_nr & 1);
+                    if (option_nr & 1) {
+                        printf("nanocoap: discarding packet with unknown critical option.\n");
+                        return -EBADMSG;
+                    }
             }
 
             pkt_pos += option_len;
@@ -99,9 +109,6 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
         return -EBADMSG;
     }
 
-//    unsigned url_len = strlen((char*)pkt->url);
-//    unsigned endpoint_len;
-
     for (int i = 0; i < nanocoap_endpoints_numof; i++) {
         int res = strcmp((char*)pkt->url, endpoints[i].path);
         if (res < 0) {
@@ -121,13 +128,14 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen, unsigned payload_len)
 {
-    unsigned len = sizeof(coap_hdr_t) + coap_get_token_len(pkt);
+    unsigned tkl = coap_get_token_len(pkt);
+    unsigned len = sizeof(coap_hdr_t) + tkl;
+
     if ((len + payload_len + 1) > rlen) {
         return -ENOSPC;
     }
 
-    memcpy(rbuf, pkt->hdr, len);
-
+    coap_build_hdr((coap_hdr_t*)rbuf, COAP_RESP, pkt->token, tkl, code, pkt->hdr->id);
     coap_hdr_set_type((coap_hdr_t*)rbuf, COAP_RESP);
     coap_hdr_set_code((coap_hdr_t*)rbuf, code);
 
@@ -144,7 +152,7 @@ ssize_t coap_build_hdr(coap_hdr_t *hdr, unsigned type, uint8_t *token, size_t to
     memset(hdr, 0, sizeof(coap_hdr_t));
     hdr->ver_t_tkl = (0x1 << 6) | (type << 4) | token_len;
     hdr->code = code;
-    hdr->id = htons(id);
+    hdr->id = id;
 
     if (token_len) {
         memcpy(hdr->data, token, token_len);
@@ -220,7 +228,7 @@ unsigned coap_put_odelta(uint8_t *buf, unsigned lastonum, unsigned onum, unsigne
 
 size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *odata, size_t olen)
 {
-    assert(lastonum < onum);
+    assert(lastonum <= onum);
     int n = coap_put_odelta(buf, lastonum, onum, olen);
     if(olen) {
         memcpy(buf + n, odata, olen);
@@ -241,4 +249,33 @@ size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type
     else {
         return coap_put_option(buf, lastonum, COAP_OPT_CT, (uint8_t*)&content_type, sizeof(content_type));
     }
+}
+
+size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url)
+{
+    size_t url_len = strlen(url);
+    assert(url_len);
+
+    uint8_t *bufpos = buf;
+    char *urlpos = (char*)url;
+
+    while(url_len) {
+        size_t part_len;
+        urlpos++;
+        uint8_t *part_start = (uint8_t*)urlpos;
+
+        while (url_len--) {
+            if ((*urlpos == '/') || (*urlpos == '\0')) {
+                break;
+            }
+            urlpos++;
+        }
+
+        part_len = (uint8_t*)urlpos - part_start;
+
+        bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
+        lastonum = COAP_OPT_URL;
+    }
+
+    return bufpos - buf;
 }
