@@ -30,7 +30,7 @@ int ipv6_addr_is_unspecified(const uint8_t addr[16])
 }
 
 static int _addrlen(unsigned family) {
-    return (family == AF_INET6) ?
+    return ((family == AF_INET6) || (family == 0)) ?
         sizeof(sockaddr_t) : sizeof(struct sockaddr_in);
 }
 
@@ -56,6 +56,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const sock_udp_ep_t *endpoint)
             }
 #endif
 #if defined(SOCK_HAS_IPV6)
+        case 0:
         case AF_INET6:
             {
                 sockaddr_t *dst_addr6 = /*(sockaddr_t *)*/ sockaddr;
@@ -132,6 +133,12 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
         sock->family = remote->family;
     }
 
+#if defined(SOCK_HAS_IPV6)
+    if (!sock->family) {
+        sock->family = AF_INET6;
+    }
+#endif
+
     sock->fd = socket(sock->family, SOCK_DGRAM, IPPROTO_IP);
     if (sock->fd == -1) {
         perror("creating socket");
@@ -149,6 +156,16 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
         const int on=1;
         setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
         setsockopt(sock->fd, SOL_IP, IP_TRANSPARENT, &on, sizeof(on));
+
+#if defined(SOCK_HAS_IPV6)
+        int ipv6_v6only = 0;
+        switch(sock->family) {
+            case AF_INET6:
+                ipv6_v6only = 1;
+            case 0:
+               setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
+        }
+#endif
 
         if (bind(sock->fd, (struct sockaddr *)&local_addr, addr_len) == -1) {
             res = -1;
