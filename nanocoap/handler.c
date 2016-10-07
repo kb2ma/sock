@@ -37,7 +37,7 @@ extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t le
     bufpos += coap_put_option_ct(bufpos, 0, COAP_CT_LINK_FORMAT);
     *bufpos++ = 0xff;
 
-    for (int i = 0; i < nanocoap_endpoints_numof; i++) {
+    for (unsigned i = 0; i < nanocoap_endpoints_numof; i++) {
         if (i) {
             *bufpos++ = ',';
         }

@@ -109,7 +109,7 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
         return -EBADMSG;
     }
 
-    for (int i = 0; i < nanocoap_endpoints_numof; i++) {
+    for (unsigned i = 0; i < nanocoap_endpoints_numof; i++) {
         int res = strcmp((char*)pkt->url, endpoints[i].path);
         if (res < 0) {
             continue;
