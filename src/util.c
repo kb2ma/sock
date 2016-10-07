@@ -2,7 +2,47 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#include <stdio.h>
+
 #include "net/sock/udp.h"
+#include "net/sock/util.h"
+
+int sock_udp_fmt_endpoint(const sock_udp_ep_t *endpoint, char *addr_str, uint16_t *port)
+{
+    void *addr_ptr;
+    *addr_str = '\0';
+
+    if (endpoint->family==AF_INET) {
+#if defined(SOCK_HAS_IPV4)
+        addr_ptr = (void*)&endpoint->addr.ipv4;
+#else
+        return -ENOTSUP;
+#endif
+    }
+    else {
+#if defined(SOCK_HAS_IPV6)
+        addr_ptr = (void*)&endpoint->addr.ipv6;
+#else
+        return -ENOTSUP;
+#endif
+    }
+
+    if (!inet_ntop(endpoint->family, addr_ptr, addr_str, INET6_ADDRSTRLEN)) {
+        return 0;
+    }
+
+#if defined(SOCK_HAS_IPV6)
+    if ((endpoint->family == AF_INET6) && endpoint->netif) {
+        sprintf(addr_str + strlen(addr_str), "%%%4u", endpoint->netif);
+    }
+#endif
+
+    if (port) {
+        *port = endpoint->port;
+    }
+
+    return strlen(addr_str);
+}
 
 static char* _find_hoststart(const char *url)
 {

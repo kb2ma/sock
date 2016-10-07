@@ -5,6 +5,8 @@
 #include "nanocoap.h"
 #include "net/sock/udp.h"
 
+#include "net/sock/util.h"
+
 ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
 {
     ssize_t res;

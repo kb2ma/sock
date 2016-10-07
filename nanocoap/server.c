@@ -7,8 +7,13 @@
 #include "net/sock/udp.h"
 #include "nanocoap.h"
 
+#include "net/sock/util.h"
+
 int main(int argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
+
     uint8_t buf[128];
 
     sock_udp_t sock;
