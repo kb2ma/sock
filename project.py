@@ -1,5 +1,5 @@
 default.CC="gcc"
-default.CFLAGS = "-g -Os -Wall -std=c11"
+default.CFLAGS = "-g -Os -Wall -Wextra -pedantic -std=c11"
 default.includes += "include"
 default.includes += "src/posix"
 default.includes += "%s/sys/include" % os.environ['RIOTBASE']
