@@ -69,7 +69,7 @@ ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
                 timeout *= 2;
                 continue;
             }
-            printf("nanocoap: error sending coap request\n");
+            printf("nanocoap: error receiving coap request\n");
             break;
         }
 
@@ -79,7 +79,16 @@ ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
             continue;
         }
         else {
-            res = 0;
+            res = coap_get_code(&pkt);
+            if (res != 205) {
+                res = -res;
+            }
+            else {
+                if (pkt.payload_len) {
+                    memcpy(buf, pkt.payload, pkt.payload_len);
+                }
+                res = pkt.payload_len;
+            }
             break;
         }
     }

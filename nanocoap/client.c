@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,10 +12,21 @@
 int main(int argc, char *argv[])
 {
     uint8_t buf[128];
+    ssize_t res;
+
     if (argc < 2) {
-        printf("usage: %s <url>\n", argv[0]);
+        fprintf(stderr, "usage: %s <url>\n", argv[0]);
         return 1;
     }
-    coap_get(argv[1], buf, sizeof(buf));
+
+    if ((res = coap_get(argv[1], buf, sizeof(buf)) <= 0)) {
+        fprintf(stderr, "error %zi\n", res);
+        return 1;
+    }
+    else {
+        assert((unsigned)res < sizeof(buf));
+        printf("%*s\n", (int)res, buf);
+        return 0;
+    }
 }
 
