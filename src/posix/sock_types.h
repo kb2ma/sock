@@ -9,6 +9,6 @@
 struct sock_udp {
     int fd;
     unsigned flags;
-    unsigned family;
+    int family;
     sockaddr_t peer;
 };
