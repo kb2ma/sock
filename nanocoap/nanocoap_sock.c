@@ -60,6 +60,7 @@ ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
             printf("nanocoap: error sending coap request\n");
             goto out;
         }
+
         res = sock_udp_recv(&sock, buf, len, timeout, NULL);
         if (res <= 0) {
             if (res == -ETIMEDOUT) {
@@ -69,7 +70,7 @@ ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
                 continue;
             }
             printf("nanocoap: error sending coap request\n");
-            goto out;
+            break;
         }
 
         coap_pkt_t pkt;
@@ -77,11 +78,9 @@ ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
             puts("error parsing packet");
             continue;
         }
-        printf("recv res=%zi\n", res);
-        if (pkt.hdr->code == COAP_CODE_205) {
-            printf("nanocoap payload length=%u content: \"%*s\"\n", pkt.payload_len, pkt.payload_len, pkt.payload);
+        else {
             res = 0;
-            goto out;
+            break;
         }
     }
 
