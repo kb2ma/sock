@@ -7,16 +7,6 @@
 
 static int _decode_value(unsigned val, uint8_t **pkt_pos_ptr, uint8_t *pkt_end);
 
-extern ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len);
-extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len);
-
-const coap_endpoint_t endpoints[] = {
-    { "/test", COAP_METHOD_GET, _test_handler },
-    { "/.well-known/core", COAP_METHOD_GET, _well_known_core_handler },
-};
-
-const unsigned nanocoap_endpoints_numof = sizeof(endpoints) / sizeof(endpoints[0]);
-
 /* http://tools.ietf.org/html/rfc7252#section-3
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -109,16 +99,22 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
         return -EBADMSG;
     }
 
-    for (unsigned i = 0; i < nanocoap_endpoints_numof; i++) {
-        int res = strcmp((char*)pkt->url, endpoints[i].path);
-        if (res < 0) {
+    unsigned method_flag = coap_method2flag(coap_get_code_detail(pkt));
+
+    for (unsigned i = 0; i < coap_resources_numof; i++) {
+        if (! (coap_resources[i].methods & method_flag)) {
             continue;
         }
-        else if (res > 0) {
+
+        int res = strcmp((char*)pkt->url, coap_resources[i].path);
+        if (res > 0) {
+            continue;
+        }
+        else if (res < 0) {
             break;
         }
         else {
-            return endpoints[i].handler(pkt, resp_buf, resp_buf_len);
+            return coap_resources[i].handler(pkt, resp_buf, resp_buf_len);
         }
     }
 

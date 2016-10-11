@@ -13,22 +13,15 @@ ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
             coap_get_code_detail(pkt),
             pkt->payload_len, (unsigned)len, pkt->hdr->code);
 
-    switch (coap_get_code_detail(pkt)) {
-        case COAP_METHOD_GET:
-            puts("get");
-            const char payload[] = "1234";
-            *bufpos++ = 0xff;
-            memcpy(bufpos, payload, 4);
-            return coap_build_reply(pkt, COAP_CODE_205, buf, len, 5);
-        default:
-            puts("unhandled method");
-            return -1;
-    }
+    const char payload[] = "1234";
+    *bufpos++ = 0xff;
+    memcpy(bufpos, payload, 4);
+    return coap_build_reply(pkt, COAP_CODE_205, buf, len, 5);
 
     return 0;
 }
 
-extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
+ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
 {
     uint8_t *payload = buf + coap_get_total_hdr_len(pkt);
 
@@ -37,13 +30,13 @@ extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t le
     bufpos += coap_put_option_ct(bufpos, 0, COAP_CT_LINK_FORMAT);
     *bufpos++ = 0xff;
 
-    for (unsigned i = 0; i < nanocoap_endpoints_numof; i++) {
+    for (unsigned i = 0; i < coap_resources_numof; i++) {
         if (i) {
             *bufpos++ = ',';
         }
         *bufpos++ = '<';
-        unsigned url_len = strlen(endpoints[i].path);
-        memcpy(bufpos, endpoints[i].path, url_len);
+        unsigned url_len = strlen(coap_resources[i].path);
+        memcpy(bufpos, coap_resources[i].path, url_len);
         bufpos += url_len;
         *bufpos++ = '>';
     }
@@ -52,3 +45,13 @@ extern ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t le
 
     return coap_build_reply(pkt, COAP_CODE_205, buf, len, payload_len);
 }
+
+ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len);
+ssize_t _well_known_core_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len);
+
+const coap_resource_t coap_resources[] = {
+    { "/.well-known/core", COAP_GET, _well_known_core_handler },
+    { "/test", COAP_GET, _test_handler },
+};
+
+const unsigned coap_resources_numof = sizeof(coap_resources) / sizeof(coap_resources[0]);
