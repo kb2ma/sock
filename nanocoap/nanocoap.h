@@ -115,6 +115,11 @@ static inline unsigned coap_get_code_detail(coap_pkt_t *pkt)
     return pkt->hdr->code & 0x1f;
 }
 
+static inline unsigned coap_get_code(coap_pkt_t *pkt)
+{
+    return (coap_get_code_class(pkt) * 100) + coap_get_code_detail(pkt);
+}
+
 static inline unsigned coap_get_id(coap_pkt_t *pkt)
 {
     return ntohs(pkt->hdr->id);
