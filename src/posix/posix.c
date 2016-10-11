@@ -14,7 +14,7 @@
 #define SOCK_UDP_LOCAL (0x1)
 #define SOCK_UDP_REMOTE (0x2)
 
-#define SOCK_NO_TIMEOUT (0x0-1)
+#define SOCK_NO_TIMEOUT (UINT32_MAX)
 
 static int _bind_to_device(int fd, unsigned netif);
 static int _set_remote(sock_udp_t *sock, const sock_udp_ep_t *dst);
