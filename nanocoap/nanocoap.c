@@ -5,6 +5,9 @@
 
 #include "nanocoap.h"
 
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
 static int _decode_value(unsigned val, uint8_t **pkt_pos_ptr, uint8_t *pkt_end);
 
 /* http://tools.ietf.org/html/rfc7252#section-3
@@ -41,22 +44,22 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
         if (option_byte == 0xff) {
             pkt->payload = pkt_pos;
             pkt->payload_len = buf + len - pkt_pos;
-            printf("payload len = %u\n", pkt->payload_len);
+            DEBUG("payload len = %u\n", pkt->payload_len);
             break;
         }
         else {
             int option_delta = _decode_value(option_byte >> 4, &pkt_pos, pkt_end);
             if (option_delta < 0) {
-                puts("bad op delta");
+                DEBUG("bad op delta\n");
                 return -EBADMSG;
             }
             int option_len = _decode_value(option_byte & 0xf, &pkt_pos, pkt_end);
             if (option_len < 0) {
-                puts("bad op len");
+                DEBUG("bad op len\n");
                 return -EBADMSG;
             }
             option_nr += option_delta;
-            printf("option nr=%i len=%i\n", option_nr, option_len);
+            DEBUG("option nr=%i len=%i\n", option_nr, option_len);
 
             switch (option_nr) {
                 case COAP_OPT_URL:
@@ -73,9 +76,9 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
                     }
                     break;
                 default:
-                    printf("nanocoap: unhandled option nr=%i len=%i critical=%u\n", option_nr, option_len, option_nr & 1);
+                    DEBUG("nanocoap: unhandled option nr=%i len=%i critical=%u\n", option_nr, option_len, option_nr & 1);
                     if (option_nr & 1) {
-                        printf("nanocoap: discarding packet with unknown critical option.\n");
+                        DEBUG("nanocoap: discarding packet with unknown critical option.\n");
                         return -EBADMSG;
                     }
             }
@@ -84,7 +87,7 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
         }
     }
 
-    printf("coap pkt parsed. code=%u detail=%u payload_len=%u, 0x%02x\n",
+    DEBUG("coap pkt parsed. code=%u detail=%u payload_len=%u, 0x%02x\n",
             coap_get_code_class(pkt),
             coap_get_code_detail(pkt),
             pkt->payload_len, hdr->code);
@@ -95,7 +98,7 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
 ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_len)
 {
     if (coap_get_code_class(pkt) != COAP_REQ) {
-        puts("coap_handle_req(): not a request.");
+        DEBUG("coap_handle_req(): not a request.\n");
         return -EBADMSG;
     }
 

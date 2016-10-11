@@ -9,6 +9,9 @@
 
 #include "net/sock/util.h"
 
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
 int main(int argc, char *argv[])
 {
     (void)argc;
@@ -37,15 +40,14 @@ int main(int argc, char *argv[])
             uint16_t port;
             sock_udp_fmt_endpoint(&remote, addr_str, &port);
             buf[res] = '\0';
-            printf("recv %zi from %s port %u.\n", res, addr_str, remote.port);
+            DEBUG("recv %zi from %s port %u.\n", res, addr_str, remote.port);
             coap_pkt_t pkt;
             if (coap_parse(&pkt, (uint8_t*)buf, res) < 0) {
-                puts("error parsing packet");
+                DEBUG("error parsing packet\n");
                 continue;
             }
             if ((res = coap_handle_req(&pkt, buf, sizeof(buf))) > 0) {
                 res = sock_udp_send(&sock, buf, res, &remote);
-                printf("%zi\n", res);
             }
         }
     }
