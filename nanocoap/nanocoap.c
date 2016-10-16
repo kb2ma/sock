@@ -74,9 +74,11 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
                     urlpos += option_len;
                     break;
                 case COAP_OPT_CT:
-                    if (option_len == 1) {
+                    if (option_len == 0) {
+                        pkt->content_type = 0;
+                    } else if (option_len == 1) {
                         pkt->content_type = *pkt_pos;
-                    } else {
+                    } else if (option_len == 2) {
                         memcpy(&pkt->content_type, pkt_pos, 2);
                         pkt->content_type = ntohs(pkt->content_type);
                     }
