@@ -33,6 +33,7 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
     uint8_t *pkt_end = buf + len;
 
     memset(pkt->url, '\0', NANOCOAP_URL_MAX);
+    pkt->payload_len = 0;
 
     /* token value (tkl bytes) */
     pkt_pos += coap_get_token_len(pkt);
