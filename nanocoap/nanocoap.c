@@ -246,10 +246,10 @@ size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *
 
 size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type)
 {
-    if (!content_type) {
-        return 0;
+    if (content_type == 0) {
+        return coap_put_option(buf, lastonum, COAP_OPT_CT, NULL, 0);
     }
-    if (content_type <= 255) {
+    else if (content_type <= 255) {
         uint8_t tmp = content_type;
         return coap_put_option(buf, lastonum, COAP_OPT_CT, &tmp, sizeof(tmp));
     }
