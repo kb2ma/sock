@@ -280,8 +280,10 @@ size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url)
 
         part_len = (uint8_t*)urlpos - part_start;
 
-        bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
-        lastonum = COAP_OPT_URL;
+        if (part_len) {
+            bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
+            lastonum = COAP_OPT_URL;
+        }
     }
 
     return bufpos - buf;
