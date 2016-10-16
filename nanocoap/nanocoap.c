@@ -36,7 +36,12 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
     pkt->payload_len = 0;
 
     /* token value (tkl bytes) */
-    pkt_pos += coap_get_token_len(pkt);
+    if (coap_get_token_len(pkt)) {
+        pkt->token = pkt_pos;
+        pkt_pos += coap_get_token_len(pkt);
+    } else {
+        pkt->token = NULL;
+    }
 
     /* parse options */
     int option_nr = 0;
