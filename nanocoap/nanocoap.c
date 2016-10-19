@@ -5,7 +5,11 @@
 
 #include "nanocoap.h"
 
+#if NANOCOAP_DEBUG
+#define ENABLE_DEBUG (1)
+#else
 #define ENABLE_DEBUG (0)
+#endif
 #include "debug.h"
 
 static int _decode_value(unsigned val, uint8_t **pkt_pos_ptr, uint8_t *pkt_end);
