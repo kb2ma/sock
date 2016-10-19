@@ -10,15 +10,28 @@
 #define NANOCOAP_URL_MAX        (64)
 
 #define COAP_OPT_URL            (11)
+#define COAP_OPT_URI_PATH       (11)
 #define COAP_OPT_CT             (12)
+#define COAP_OPT_CONTENT_FORMAT (12)
 
 #define COAP_REQ                (0)
 #define COAP_RESP               (2)
 
 /**
+ * @name Message types -- confirmable, non-confirmable, etc.
+ * @{
+ */
+#define COAP_TYPE_CON           (0)
+#define COAP_TYPE_NON           (1)
+#define COAP_TYPE_ACK           (2)
+#define COAP_TYPE_RST           (3)
+/** @} */
+
+/**
  * @name CoAP method codes used in header
  * @{
  */
+#define COAP_CLASS_REQ          (0)
 #define COAP_METHOD_GET         (1)
 #define COAP_METHOD_POST        (2)
 #define COAP_METHOD_PUT         (3)
@@ -35,14 +48,66 @@
 #define COAP_DELETE             (0x8)
 /** @} */
 
-#define COAP_CODE_205           ((2<<5) | 5)
-#define COAP_CODE_404           ((4<<5) | 4)
+/**
+ * @name Response message codes: success
+ * @{
+ */
+#define COAP_CLASS_SUCCESS      (2)
+#define COAP_CODE_CREATED      ((2<<5) | 1)
+#define COAP_CODE_DELETED      ((2<<5) | 2)
+#define COAP_CODE_VALID        ((2<<5) | 3)
+#define COAP_CODE_CHANGED      ((2<<5) | 4)
+#define COAP_CODE_CONTENT      ((2<<5) | 5)
+#define COAP_CODE_205          ((2<<5) | 5)
+/** @} */
+/**
+ * @name Response message codes: client error
+ * @{
+ */
+#define COAP_CLASS_CLIENT_FAILURE             (4)
+#define COAP_CODE_BAD_REQUEST                ((4<<5) | 0)
+#define COAP_CODE_UNAUTHORIZED               ((4<<5) | 1)
+#define COAP_CODE_BAD_OPTION                 ((4<<5) | 2)
+#define COAP_CODE_FORBIDDEN                  ((4<<5) | 3)
+#define COAP_CODE_PATH_NOT_FOUND             ((4<<5) | 4)
+#define COAP_CODE_404                        ((4<<5) | 4)
+#define COAP_CODE_METHOD_NOT_ALLOWED         ((4<<5) | 5)
+#define COAP_CODE_NOT_ACCEPTABLE             ((4<<5) | 6)
+#define COAP_CODE_PRECONDITION_FAILED        ((4<<5) | 0xC)
+#define COAP_CODE_REQUEST_ENTITY_TOO_LARGE   ((4<<5) | 0xD)
+#define COAP_CODE_UNSUPPORTED_CONTENT_FORMAT ((4<<5) | 0xF)
+/** @} */
+/**
+ * @name Response message codes: server error
+ * @{
+ */
+#define COAP_CLASS_SERVER_FAILURE             (5)
+#define COAP_CODE_INTERNAL_SERVER_ERROR      ((5<<5) | 0)
+#define COAP_CODE_NOT_IMPLEMENTED            ((5<<5) | 1)
+#define COAP_CODE_BAD_GATEWAY                ((5<<5) | 2)
+#define COAP_CODE_SERVICE_UNAVAILABLE        ((5<<5) | 3)
+#define COAP_CODE_GATEWAY_TIMEOUT            ((5<<5) | 4)
+#define COAP_CODE_PROXYING_NOT_SUPPORTED     ((5<<5) | 5)
+/** @} */
 
 #define COAP_CT_LINK_FORMAT     (40)
 #define COAP_CT_XML             (41)
 #define COAP_CT_OCTET_STREAM    (42)
 #define COAP_CT_EXI             (47)
 #define COAP_CT_JSON            (50)
+
+/**
+ * @name Content-Format option codes
+ * @{
+ */
+#define COAP_FORMAT_TEXT         (0)
+#define COAP_FORMAT_LINK        (40)
+#define COAP_FORMAT_OCTET       (42)
+#define COAP_FORMAT_JSON        (50)
+#define COAP_FORMAT_CBOR        (60)
+/** @brief nanocoap-specific value to indicate no format specified. */
+#define COAP_FORMAT_NONE     (65535)
+/** @} */
 
 #define COAP_ACK_TIMEOUT        (2U)
 #define COAP_RANDOM_FACTOR      (1.5)

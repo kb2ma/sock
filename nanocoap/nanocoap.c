@@ -33,9 +33,15 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
     uint8_t *pkt_end = buf + len;
 
     memset(pkt->url, '\0', NANOCOAP_URL_MAX);
+    pkt->payload_len = 0;
 
     /* token value (tkl bytes) */
-    pkt_pos += coap_get_token_len(pkt);
+    if (coap_get_token_len(pkt)) {
+        pkt->token = pkt_pos;
+        pkt_pos += coap_get_token_len(pkt);
+    } else {
+        pkt->token = NULL;
+    }
 
     /* parse options */
     int option_nr = 0;
@@ -68,9 +74,11 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
                     urlpos += option_len;
                     break;
                 case COAP_OPT_CT:
-                    if (option_len == 1) {
+                    if (option_len == 0) {
+                        pkt->content_type = 0;
+                    } else if (option_len == 1) {
                         pkt->content_type = *pkt_pos;
-                    } else {
+                    } else if (option_len == 2) {
                         memcpy(&pkt->content_type, pkt_pos, 2);
                         pkt->content_type = ntohs(pkt->content_type);
                     }
@@ -238,10 +246,10 @@ size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *
 
 size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type)
 {
-    if (!content_type) {
-        return 0;
+    if (content_type == 0) {
+        return coap_put_option(buf, lastonum, COAP_OPT_CT, NULL, 0);
     }
-    if (content_type <= 255) {
+    else if (content_type <= 255) {
         uint8_t tmp = content_type;
         return coap_put_option(buf, lastonum, COAP_OPT_CT, &tmp, sizeof(tmp));
     }
@@ -272,8 +280,10 @@ size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url)
 
         part_len = (uint8_t*)urlpos - part_start;
 
-        bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
-        lastonum = COAP_OPT_URL;
+        if (part_len) {
+            bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
+            lastonum = COAP_OPT_URL;
+        }
     }
 
     return bufpos - buf;
