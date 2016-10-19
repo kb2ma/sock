@@ -68,12 +68,12 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
             DEBUG("option nr=%i len=%i\n", option_nr, option_len);
 
             switch (option_nr) {
-                case COAP_OPT_URL:
+                case COAP_OPT_URI_PATH:
                     *urlpos++ = '/';
                     memcpy(urlpos, pkt_pos, option_len);
                     urlpos += option_len;
                     break;
-                case COAP_OPT_CT:
+                case COAP_OPT_CONTENT_FORMAT:
                     if (option_len == 0) {
                         pkt->content_type = 0;
                     } else if (option_len == 1) {
@@ -247,14 +247,14 @@ size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *
 size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type)
 {
     if (content_type == 0) {
-        return coap_put_option(buf, lastonum, COAP_OPT_CT, NULL, 0);
+        return coap_put_option(buf, lastonum, COAP_OPT_CONTENT_FORMAT, NULL, 0);
     }
     else if (content_type <= 255) {
         uint8_t tmp = content_type;
-        return coap_put_option(buf, lastonum, COAP_OPT_CT, &tmp, sizeof(tmp));
+        return coap_put_option(buf, lastonum, COAP_OPT_CONTENT_FORMAT, &tmp, sizeof(tmp));
     }
     else {
-        return coap_put_option(buf, lastonum, COAP_OPT_CT, (uint8_t*)&content_type, sizeof(content_type));
+        return coap_put_option(buf, lastonum, COAP_OPT_CONTENT_FORMAT, (uint8_t*)&content_type, sizeof(content_type));
     }
 }
 
@@ -281,8 +281,8 @@ size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url)
         part_len = (uint8_t*)urlpos - part_start;
 
         if (part_len) {
-            bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URL, part_start, part_len);
-            lastonum = COAP_OPT_URL;
+            bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URI_PATH, part_start, part_len);
+            lastonum = COAP_OPT_URI_PATH;
         }
     }
 

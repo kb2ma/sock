@@ -9,9 +9,8 @@
 #define COAP_PORT               (5683)
 #define NANOCOAP_URL_MAX        (64)
 
-#define COAP_OPT_URL            (11)
+#define COAP_OPT_URI_HOST       (3)
 #define COAP_OPT_URI_PATH       (11)
-#define COAP_OPT_CT             (12)
 #define COAP_OPT_CONTENT_FORMAT (12)
 
 #define COAP_REQ                (0)
