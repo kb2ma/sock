@@ -5,6 +5,7 @@ int sock_udp_fmt_endpoint(const sock_udp_ep_t *endpoint, char *addr_str, uint16_
 int sock_urlsplit(const char *url, char *hostport, char *urlpath);
 int sock_str2ep(sock_udp_ep_t *ep_out, const char *str);
 
+#define SOCK_HOST_MAXLEN    (32U)
 #define SOCK_HOSTPORT_MAXLEN    (32U)
 #define SOCK_URLPATH_MAXLEN    (32U)
 

@@ -7,6 +7,10 @@
 #include "net/sock/udp.h"
 #include "net/sock/util.h"
 
+#ifdef RIOT_VERSION
+#include "fmt.h"
+#endif
+
 int sock_udp_fmt_endpoint(const sock_udp_ep_t *endpoint, char *addr_str, uint16_t *port)
 {
     void *addr_ptr;
@@ -33,7 +37,14 @@ int sock_udp_fmt_endpoint(const sock_udp_ep_t *endpoint, char *addr_str, uint16_
 
 #if defined(SOCK_HAS_IPV6)
     if ((endpoint->family == AF_INET6) && endpoint->netif) {
+#ifdef RIOT_VERSION
+        char *tmp = addr_str + strlen(addr_str);
+        *tmp++ = '%';
+        tmp += fmt_u16_dec(tmp, endpoint->netif);
+        *tmp = '0';
+#else
         sprintf(addr_str + strlen(addr_str), "%%%4u", endpoint->netif);
+#endif
     }
 #endif
 
@@ -101,7 +112,7 @@ int sock_str2ep(sock_udp_ep_t *ep_out, const char *str)
     char *hoststart = (char*)str;
     char *hostend = hoststart;
 
-    char hostbuf[64];
+    char hostbuf[SOCK_HOST_MAXLEN];
 
     memset(ep_out, 0, sizeof(sock_udp_ep_t));
 
