@@ -12,11 +12,11 @@ SERVER_SRC=server.c $(SHARED_SRC)
 bin/:
 	@mkdir -p bin
 
-bin/nanocoap_client: $(CLIENT_SRC) bin/
-	$(CC) $(CFLAGS) $? -o $@
+bin/nanocoap_client: $(CLIENT_SRC) | bin/
+	$(CC) $(CFLAGS) $^ -o $@
 
-bin/nanocoap_server: $(SERVER_SRC) bin/
-	$(CC) $(CFLAGS) $? -o $@
+bin/nanocoap_server: $(SERVER_SRC) | bin/
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
 	rm -f bin/nanocoap_client bin/nanocoap_server
