@@ -117,6 +117,7 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
 
     int res;
     sockaddr_t local_addr;
+    sockaddr_t remote_addr;
 
     if (!(local || remote)) {
         return -EINVAL;
@@ -151,37 +152,51 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
         memset((void*)&local_addr, '\0', sizeof(local_addr));
         _endpoint_to_sockaddr(&local_addr, local);
 
-        unsigned addr_len = _addrlen(sock->family);
+        if (!remote) {
+            unsigned addr_len = _addrlen(sock->family);
 
-        const int on=1;
-        setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-        setsockopt(sock->fd, SOL_IP, IP_TRANSPARENT, &on, sizeof(on));
+            const int on=1;
+            setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+            setsockopt(sock->fd, SOL_IP, IP_TRANSPARENT, &on, sizeof(on));
 
 #if defined(SOCK_HAS_IPV6)
-        int ipv6_v6only = 0;
-        switch(sock->family) {
-            case AF_INET6:
-                ipv6_v6only = 1;
-            case 0:
-               setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
-        }
+            int ipv6_v6only = 0;
+            switch(sock->family) {
+                case AF_INET6:
+                    ipv6_v6only = 1;
+                case 0:
+                    setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
+            }
 #endif
 
-        if (bind(sock->fd, (struct sockaddr *)&local_addr, addr_len) == -1) {
-            res = -1;
-            perror("bind");
-            goto close;
+            if (bind(sock->fd, (struct sockaddr *)&local_addr, addr_len) == -1) {
+                res = -1;
+                perror("bind");
+                goto close;
+            }
+            sock->flags |= SOCK_UDP_LOCAL;
         }
-        sock->flags |= SOCK_UDP_LOCAL;
     }
 
     if (remote) {
+        memset((void*)&remote_addr, '\0', sizeof(remote_addr));
+        _endpoint_to_sockaddr(&remote_addr, remote);
+        unsigned addr_len = _addrlen(sock->family);
+
         if (!local) {
             sock->family = remote->family;
         }
+
+        if ((connect(sock->fd, (struct sockaddr *)&remote_addr, addr_len)) == -1 ) {
+            res = -1;
+            perror("connect");
+            goto close;
+        }
+
         if ((res = _set_remote(sock, remote))) {
             goto close;
         }
+        sock->flags |= SOCK_UDP_LOCAL;
     }
 
     return 0;
