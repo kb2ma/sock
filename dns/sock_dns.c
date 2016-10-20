@@ -114,15 +114,21 @@ int sock_dns_query(const char *domain_name, void *addr_out, int family)
 
     uint8_t *bufpos = buf + sizeof(*hdr);
 
-
+    unsigned _name_ptr;
     if ((family == AF_INET6) || (family == AF_UNSPEC)) {
+        _name_ptr = (bufpos - buf);
         bufpos += _enc_domain_name(bufpos, domain_name);
         bufpos += _put_short(bufpos, htons(DNS_TYPE_AAAA));
         bufpos += _put_short(bufpos, htons(DNS_CLASS_IN));
     }
 
     if ((family == AF_INET) || (family == AF_UNSPEC)) {
-        bufpos += _enc_domain_name(bufpos, domain_name);
+        if (family == AF_UNSPEC) {
+            bufpos += _put_short(bufpos, htons((0xc000) | (_name_ptr)));
+        }
+        else {
+            bufpos += _enc_domain_name(bufpos, domain_name);
+        }
         bufpos += _put_short(bufpos, htons(DNS_TYPE_A));
         bufpos += _put_short(bufpos, htons(DNS_CLASS_IN));
     }
