@@ -221,7 +221,7 @@ static int _decode_value(unsigned val, uint8_t **pkt_pos_ptr, uint8_t *pkt_end)
     return res;
 }
 
-unsigned coap_put_odelta(uint8_t *buf, unsigned lastonum, unsigned onum, unsigned olen)
+static unsigned _put_odelta(uint8_t *buf, unsigned lastonum, unsigned onum, unsigned olen)
 {
     unsigned delta = onum - lastonum;
     if (delta < 13) {
@@ -243,7 +243,7 @@ unsigned coap_put_odelta(uint8_t *buf, unsigned lastonum, unsigned onum, unsigne
 size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *odata, size_t olen)
 {
     assert(lastonum <= onum);
-    int n = coap_put_odelta(buf, lastonum, onum, olen);
+    int n = _put_odelta(buf, lastonum, onum, olen);
     if(olen) {
         memcpy(buf + n, odata, olen);
         n += olen;
