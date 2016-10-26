@@ -15,6 +15,7 @@
 
 #define COAP_REQ                (0)
 #define COAP_RESP               (2)
+#define COAP_RST                (3)
 
 /**
  * @name Message types -- confirmable, non-confirmable, etc.
@@ -46,6 +47,8 @@
 #define COAP_PUT                (0x4)
 #define COAP_DELETE             (0x8)
 /** @} */
+
+#define COAP_CODE_EMPTY         (0)
 
 /**
  * @name Response message codes: success

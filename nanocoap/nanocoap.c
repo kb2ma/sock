@@ -117,6 +117,10 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
         return -EBADMSG;
     }
 
+    if (pkt->hdr->code == 0) {
+        return coap_build_reply(pkt, COAP_CODE_EMPTY, resp_buf, resp_buf_len, 0);
+    }
+
     unsigned method_flag = coap_method2flag(coap_get_code_detail(pkt));
 
     for (unsigned i = 0; i < coap_resources_numof; i++) {
@@ -149,8 +153,11 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         return -ENOSPC;
     }
 
-    coap_build_hdr((coap_hdr_t*)rbuf, COAP_RESP, pkt->token, tkl, code, pkt->hdr->id);
-    coap_hdr_set_type((coap_hdr_t*)rbuf, COAP_RESP);
+    /* if code is COAP_CODE_EMPTY (zero), use RST as type, else RESP */
+    unsigned type = code ? COAP_RESP : COAP_RST;
+
+    coap_build_hdr((coap_hdr_t*)rbuf, type, pkt->token, tkl, code, pkt->hdr->id);
+    coap_hdr_set_type((coap_hdr_t*)rbuf, type);
     coap_hdr_set_code((coap_hdr_t*)rbuf, code);
 
     len += payload_len;
