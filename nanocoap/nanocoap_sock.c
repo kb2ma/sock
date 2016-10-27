@@ -7,6 +7,13 @@
 
 #include "net/sock/util.h"
 
+#if NANOCOAP_DEBUG
+#define ENABLE_DEBUG (1)
+#else
+#define ENABLE_DEBUG (0)
+#endif
+#include "debug.h"
+
 ssize_t coap_get(const char *url, uint8_t *buf, size_t len)
 {
     ssize_t res;
@@ -97,4 +104,39 @@ out:
     sock_udp_close(&sock);
 
     return res;
+}
+
+int nanocoap_server(sock_udp_ep_t *local, uint8_t *buf, size_t bufsize)
+{
+    sock_udp_t sock;
+    sock_udp_ep_t remote = { 0 };
+
+    if (!local->port) {
+        local->port = COAP_PORT;
+    }
+
+    ssize_t res = sock_udp_create(&sock, local, NULL, 0);
+    if (res == -1) {
+        return -1;
+    }
+
+    while(1) {
+        res = sock_udp_recv(&sock, buf, bufsize, -1, &remote);
+        if (res == -1) {
+            perror("recv");
+            return -1;
+        }
+        else {
+            coap_pkt_t pkt;
+            if (coap_parse(&pkt, (uint8_t*)buf, res) < 0) {
+                DEBUG("error parsing packet\n");
+                continue;
+            }
+            if ((res = coap_handle_req(&pkt, buf, bufsize)) > 0) {
+                res = sock_udp_send(&sock, buf, res, &remote);
+            }
+        }
+    }
+
+    return 0;
 }
