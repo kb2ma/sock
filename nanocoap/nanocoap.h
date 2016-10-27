@@ -155,8 +155,6 @@ size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, uint8_t *
 size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type);
 size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url);
 
-ssize_t coap_get(const char *url, uint8_t *buf, size_t len);
-
 static inline unsigned coap_get_ver(coap_pkt_t *pkt)
 {
     return (pkt->hdr->ver_t_tkl & 0x60) >> 6;
