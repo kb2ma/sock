@@ -148,6 +148,11 @@ int coap_parse(coap_pkt_t* pkt, uint8_t *buf, size_t len);
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen, unsigned payload_len);
 
+ssize_t coap_reply_simple(coap_pkt_t *pkt,
+        uint8_t *buf, size_t len,
+        unsigned ct,
+        const uint8_t *payload, uint8_t payload_len);
+
 ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_len);
 
 ssize_t coap_build_hdr(coap_hdr_t *hdr, unsigned type, uint8_t *token, size_t token_len, unsigned code, uint16_t id);

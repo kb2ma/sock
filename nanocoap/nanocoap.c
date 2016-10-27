@@ -143,6 +143,25 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
     return coap_build_reply(pkt, COAP_CODE_404, resp_buf, resp_buf_len, 0);
 }
 
+ssize_t coap_reply_simple(coap_pkt_t *pkt,
+        uint8_t *buf, size_t len,
+        unsigned ct,
+        const uint8_t *payload, uint8_t payload_len)
+{
+    uint8_t *payload_start = buf + coap_get_total_hdr_len(pkt);
+    uint8_t *bufpos = payload_start;
+
+    if (payload_len) {
+        bufpos += coap_put_option_ct(bufpos, 0, ct);
+        *bufpos++ = 0xff;
+
+        memcpy(bufpos, payload, payload_len);
+        bufpos += payload_len;
+    }
+
+    return coap_build_reply(pkt, COAP_CODE_205, buf, len, bufpos - payload_start);
+}
+
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen, unsigned payload_len)
 {
