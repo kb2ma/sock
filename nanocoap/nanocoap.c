@@ -72,9 +72,6 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
             DEBUG("option nr=%i len=%i\n", option_nr, option_len);
 
             switch (option_nr) {
-                case COAP_OPT_URI_HOST:
-                    DEBUG("nanocoap: ignoring Uri-Host option!\n");
-                    break;
                 case COAP_OPT_URI_PATH:
                     *urlpos++ = '/';
                     memcpy(urlpos, pkt_pos, option_len);
