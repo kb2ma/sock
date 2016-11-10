@@ -88,7 +88,7 @@ out:
 int nanocoap_server(sock_udp_ep_t *local, uint8_t *buf, size_t bufsize)
 {
     sock_udp_t sock;
-    sock_udp_ep_t remote = { 0 };
+    sock_udp_ep_t remote;
 
     if (!local->port) {
         local->port = COAP_PORT;
