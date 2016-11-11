@@ -133,13 +133,9 @@ int sock_dns_query(const char *domain_name, void *addr_out, int family)
         bufpos += _put_short(bufpos, htons(DNS_CLASS_IN));
     }
 
-    uint8_t _addrtmp[4] = {8,8,8,8};
-    sock_udp_ep_t dns_ep = { .family=AF_INET, .port=SOCK_DNS_PORT };
-    memcpy(&dns_ep.addr.ipv4, _addrtmp, 4);
-
     sock_udp_t sock_dns;
 
-    ssize_t res = sock_udp_create(&sock_dns, NULL, &dns_ep, 0);
+    ssize_t res = sock_udp_create(&sock_dns, NULL, &sock_dns_server, 0);
     if (res) {
         goto out;
     }

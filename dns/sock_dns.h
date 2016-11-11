@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#include "net/sock/udp.h"
+
 typedef struct {
     uint16_t id;
     uint16_t flags;
@@ -27,5 +29,7 @@ typedef struct {
 #define SOCK_DNS_QUERYBUF_LEN   (sizeof(sock_dns_hdr_t) + 4 + SOCK_DNS_MAX_NAME_LEN)
 
 int sock_dns_query(const char *domain_name, void *addr_out, int family);
+
+extern sock_udp_ep_t sock_dns_server;
 
 #endif /* SOCK_DNS_H */

@@ -1,9 +1,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
-
-
 #include "sock_dns.h"
+
+sock_udp_ep_t sock_dns_server = { .family=AF_INET, .port=SOCK_DNS_PORT,
+                                  .addr.ipv4={8,8,8,8}
+                                };
 
 int main(int argc, char *argv[]) {
     uint8_t addr[16] = {0};
