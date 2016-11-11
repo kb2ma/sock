@@ -2,7 +2,7 @@ default.CC="gcc"
 default.CFLAGS = "-g -Os -Wall -Wextra -pedantic -std=c11"
 default.includes += "include"
 default.includes += "src/posix"
-default.includes += "%s/sys/include" % os.environ['RIOTBASE']
+default.includes += "riot/sys/include"
 default.defines += ["LINUX", "_DEFAULT_SOURCE"]
 default.defines += "SOCK_HAS_IPV6"
 default.defines += "SOCK_HAS_IPV4"

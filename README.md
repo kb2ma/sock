@@ -14,15 +14,17 @@ sock, with the aim of using minimal code and memory.
 
 ## How to build
 
-You'll need a checkout of [RIOT](https://github.com/RIOT-OS/RIOT).
+The RIOT source tree contains necessary sock headers. It is a submodule of this repository.
+Update it using
+
+    # git submodule update --init
 
 Some of the applications have a Makefile, just go into their directory and run
 
-    # RIOTBASE=<path/to/RIOT/checkout> make
+    # make
 
 There's also a set of [pyjam](https://github.com/kaspar030/pyjam) buildfiles.
 
-Use them like this:
+If you've got pyjam installed, use them like this:
 
-    # RIOTBASE=<path/to/RIOT/checkout> pyj -a
-
+    # pyj -a
