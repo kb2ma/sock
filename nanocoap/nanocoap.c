@@ -144,6 +144,7 @@ ssize_t coap_handle_req(coap_pkt_t *pkt, uint8_t *resp_buf, unsigned resp_buf_le
 }
 
 ssize_t coap_reply_simple(coap_pkt_t *pkt,
+        unsigned code,
         uint8_t *buf, size_t len,
         unsigned ct,
         const uint8_t *payload, uint8_t payload_len)
@@ -159,7 +160,7 @@ ssize_t coap_reply_simple(coap_pkt_t *pkt,
         bufpos += payload_len;
     }
 
-    return coap_build_reply(pkt, COAP_CODE_205, buf, len, bufpos - payload_start);
+    return coap_build_reply(pkt, code, buf, len, bufpos - payload_start);
 }
 
 ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
