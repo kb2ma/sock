@@ -12,7 +12,7 @@ ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
             pkt->payload_len, (unsigned)len, pkt->hdr->code);
 
     const char payload[] = "1234";
-    return coap_reply_simple(pkt, buf, len, COAP_FORMAT_TEXT, (uint8_t*)payload, 4);
+    return coap_reply_simple(pkt, COAP_CODE_205, buf, len, COAP_FORMAT_TEXT, (uint8_t*)payload, 4);
 }
 
 const coap_resource_t coap_resources[] = {
