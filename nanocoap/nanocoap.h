@@ -149,6 +149,7 @@ ssize_t coap_build_reply(coap_pkt_t *pkt, unsigned code,
         uint8_t *rbuf, unsigned rlen, unsigned payload_len);
 
 ssize_t coap_reply_simple(coap_pkt_t *pkt,
+        unsigned code,
         uint8_t *buf, size_t len,
         unsigned ct,
         const uint8_t *payload, uint8_t payload_len);
