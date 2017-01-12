@@ -38,6 +38,7 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
 
     memset(pkt->url, '\0', NANOCOAP_URL_MAX);
     pkt->payload_len = 0;
+    pkt->observe_value = UINT32_MAX;
 
     /* token value (tkl bytes) */
     if (coap_get_token_len(pkt)) {
@@ -88,6 +89,21 @@ int coap_parse(coap_pkt_t *pkt, uint8_t *buf, size_t len)
                     } else if (option_len == 2) {
                         memcpy(&pkt->content_type, pkt_pos, 2);
                         pkt->content_type = ntohs(pkt->content_type);
+                    }
+                    break;
+                case COAP_OPT_OBSERVE:
+                    if (option_len == 0) {
+                        pkt->observe_value = 0;
+                    } else if (option_len == 1) {
+                        pkt->observe_value = *pkt_pos;
+                    } else if (option_len < 4) {
+                        /* adapt 2 or 3 bytes of data to a uint32 */
+                        memset(&pkt->observe_value, 0, 4);
+                        memcpy(&pkt->observe_value + (4-option_len), pkt_pos, option_len);
+                        pkt->observe_value = ntohl(pkt->observe_value);
+                    } else {
+                        DEBUG("nanocoap: discarding packet with invalid option length.\n");
+                        return -EBADMSG;
                     }
                     break;
                 default:
