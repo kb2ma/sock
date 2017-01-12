@@ -4,12 +4,14 @@
 #include <assert.h>
 #include <arpa/inet.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #define COAP_PORT               (5683)
 #define NANOCOAP_URL_MAX        (64)
 
 #define COAP_OPT_URI_HOST       (3)
+#define COAP_OPT_OBSERVE        (6)
 #define COAP_OPT_URI_PATH       (11)
 #define COAP_OPT_CONTENT_FORMAT (12)
 
@@ -131,6 +133,7 @@ typedef struct {
     uint8_t *payload;
     unsigned payload_len;
     uint16_t content_type;
+    uint32_t observe_value;
 } coap_pkt_t;
 
 typedef ssize_t (*coap_handler_t)(coap_pkt_t* pkt, uint8_t *buf, size_t len);
@@ -223,6 +226,22 @@ static inline void coap_hdr_set_type(coap_hdr_t *hdr, unsigned type)
 static inline unsigned coap_method2flag(unsigned code)
 {
     return (1<<(code-1));
+}
+
+/**
+ * @brief  Identifies a packet containing an Observe option.
+ */
+static inline bool coap_has_observe(coap_pkt_t *pkt)
+{
+    return pkt->observe_value != UINT32_MAX;
+}
+
+/**
+ * @brief  Provides the value for the Observe option in a packet.
+ */
+static inline uint32_t coap_get_observe(coap_pkt_t *pkt)
+{
+    return pkt->observe_value;
 }
 
 extern ssize_t coap_well_known_core_default_handler(coap_pkt_t* pkt, \
