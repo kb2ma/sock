@@ -113,6 +113,14 @@
 #define COAP_FORMAT_NONE     (65535)
 /** @} */
 
+/**
+ * @name Observe (RFC 7641) constants
+ * @{
+ */
+#define COAP_OBS_REGISTER        (0)
+#define COAP_OBS_DEREGISTER      (1)
+/** @} */
+
 #define COAP_ACK_TIMEOUT        (2U)
 #define COAP_RANDOM_FACTOR      (1.5)
 #define COAP_MAX_RETRANSMIT     (4)
