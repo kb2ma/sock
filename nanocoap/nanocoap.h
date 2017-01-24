@@ -245,6 +245,14 @@ static inline bool coap_has_observe(coap_pkt_t *pkt)
 }
 
 /**
+ * @brief  Clears the Observe option value from a packet.
+ */
+static inline void coap_clear_observe(coap_pkt_t *pkt)
+{
+    pkt->observe_value = UINT32_MAX;
+}
+
+/**
  * @brief  Provides the value for the Observe option in a packet.
  */
 static inline uint32_t coap_get_observe(coap_pkt_t *pkt)
