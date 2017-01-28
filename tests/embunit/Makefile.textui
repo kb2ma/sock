@@ -1,0 +1,27 @@
+CC = gcc
+CFLAGS = -O
+INCLUDES = ..
+LIBS = ../lib
+AR = ar
+ARFLAGS = ru
+RANLIB = ranlib
+RM = rm
+SRC = ../../riot/sys/embunit
+INCLUDES = -I../../riot/sys/embunit -I../../riot/sys/include/embUnit -I../../riot/sys/include
+OUTPUT = ./
+TARGET = libtextui.a
+OBJS = TextUIRunner.o XMLOutputter.o TextOutputter.o CompilerOutputter.o
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(AR) $(ARFLAGS) $(OUTPUT)$@ $(OBJS)
+	$(RANLIB) $(OUTPUT)$@
+
+%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) -I$(INCLUDES) -c $<
+
+clean:
+	-$(RM) $(TARGET) $(OBJS)
+
+.PHONY: clean all

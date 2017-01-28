@@ -1,0 +1,25 @@
+CC = gcc
+CFLAGS = -O
+AR = ar
+ARFLAGS = ru
+RANLIB = ranlib
+RM = rm
+SRC = ../../riot/sys/embunit
+INCLUDES = -I../../riot/sys/embunit -I../../riot/sys/include/embUnit
+OUTPUT = ./
+TARGET = libembUnit.a
+OBJS = AssertImpl.o RepeatedTest.o stdImpl.o TestCaller.o TestCase.o TestResult.o TestRunner.o TestSuite.o
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(AR) $(ARFLAGS) $(OUTPUT)$@ $(OBJS)
+	$(RANLIB) $(OUTPUT)$@
+
+%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
+
+clean:
+	-$(RM) $(OBJS) $(TARGET)
+
+.PHONY: clean all

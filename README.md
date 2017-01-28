@@ -28,3 +28,17 @@ There's also a set of [pyjam](https://github.com/kaspar030/pyjam) buildfiles.
 If you've got pyjam installed, use them like this:
 
     # pyj -a
+
+## Unit tests
+
+Unit tests are provided by reuse of the Embedded Unit framework in the RIOT submodule.
+First, compile the framework.
+
+    # cd tests/embunit
+    # make
+
+Then, make and run the unit tests as required.
+
+    # cd ..
+    # make
+    # ./tests

@@ -8,6 +8,7 @@ CFLAGS += -DSOCK_HAS_IPV4 -DSOCK_HAS_IPV6 -DLINUX -D_DEFAULT_SOURCE
 SHARED_SRC=nanocoap.c handler.c nanocoap_sock.c ../src/util.c ../src/posix/posix.c
 CLIENT_SRC=client.c nanocoap_sock.c $(SHARED_SRC)
 SERVER_SRC=server.c $(SHARED_SRC)
+OBJS=bin/nanocoap.o bin/handler.o
 
 bin/:
 	@mkdir -p bin
@@ -18,5 +19,11 @@ bin/nanocoap_client: $(CLIENT_SRC) | bin/
 bin/nanocoap_server: $(SERVER_SRC) | bin/
 	$(CC) $(CFLAGS) $^ -o $@
 
+# Used by unit tests
+objs: $(OBJS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $^
+
 clean:
-	rm -f bin/nanocoap_client bin/nanocoap_server
+	rm -f bin/nanocoap_client bin/nanocoap_server bin/*.obj
