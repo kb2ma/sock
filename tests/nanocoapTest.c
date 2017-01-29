@@ -24,10 +24,34 @@ static void testParseGetReq(void)
     TEST_ASSERT_EQUAL_STRING("/cli/stats", (char *) &pdu.url[0]);
 }
 
+/*
+ * Extends testParseGetReq to include Observe registration.
+ */
+static void testParseObserveReq(void)
+{
+    coap_pkt_t pdu;
+
+    uint8_t buf[] = {
+        0x52, 0x01, 0xd3, 0x06, 0x35, 0x61, 0x60, 0x53,
+        0x63, 0x6c, 0x69, 0x05, 0x73, 0x74, 0x61, 0x74,
+        0x73
+    };
+
+    int res = coap_parse(&pdu, &buf[0], sizeof(buf));
+
+    TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT(coap_has_observe(&pdu));
+    TEST_ASSERT_EQUAL_INT(0, coap_get_observe(&pdu));
+    TEST_ASSERT_EQUAL_INT(0, pdu.payload_len);
+    /* indicates other options OK */
+    TEST_ASSERT_EQUAL_STRING("/cli/stats", (char *) &pdu.url[0]);
+}
+
 TestRef NanocoapTest_tests(void)
 {
 	EMB_UNIT_TESTFIXTURES(fixtures) {
 		new_TestFixture(testParseGetReq),
+		new_TestFixture(testParseObserveReq),
 	};
 	EMB_UNIT_TESTCALLER(NanocoapTest, NULL, NULL, fixtures);
 
