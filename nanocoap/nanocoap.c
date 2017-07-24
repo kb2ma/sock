@@ -313,31 +313,32 @@ size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type
     }
 }
 
-size_t coap_put_option_url(uint8_t *buf, uint16_t lastonum, const char *url)
+size_t coap_put_option_uri(uint8_t *buf, uint16_t lastonum, const char *uri, uint16_t optnum)
 {
-    size_t url_len = strlen(url);
-    assert(url_len);
+    char seperator = (optnum == COAP_OPT_URI_PATH) ? '/' : '&';
+    size_t uri_len = strlen(uri);
+    assert(uri_len);
 
     uint8_t *bufpos = buf;
-    char *urlpos = (char*)url;
+    char *uripos = (char*)uri;
 
-    while(url_len) {
+    while(uri_len) {
         size_t part_len;
-        urlpos++;
-        uint8_t *part_start = (uint8_t*)urlpos;
+        uripos++;
+        uint8_t *part_start = (uint8_t*)uripos;
 
-        while (url_len--) {
-            if ((*urlpos == '/') || (*urlpos == '\0')) {
+        while (uri_len--) {
+            if ((*uripos == seperator) || (*uripos == '\0')) {
                 break;
             }
-            urlpos++;
+            uripos++;
         }
 
-        part_len = (uint8_t*)urlpos - part_start;
+        part_len = (uint8_t*)uripos - part_start;
 
         if (part_len) {
-            bufpos += coap_put_option(bufpos, lastonum, COAP_OPT_URI_PATH, part_start, part_len);
-            lastonum = COAP_OPT_URI_PATH;
+            bufpos += coap_put_option(bufpos, lastonum, optnum, part_start, part_len);
+            lastonum = optnum;
         }
     }
 
