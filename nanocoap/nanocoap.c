@@ -315,7 +315,7 @@ size_t coap_put_option_ct(uint8_t *buf, uint16_t lastonum, uint16_t content_type
 
 size_t coap_put_option_uri(uint8_t *buf, uint16_t lastonum, const char *uri, uint16_t optnum)
 {
-    char seperator = (optnum == COAP_OPT_URI_PATH) ? '/' : '&';
+    char separator = (optnum == COAP_OPT_URI_PATH) ? '/' : '&';
     size_t uri_len = strlen(uri);
     assert(uri_len);
 
@@ -328,7 +328,7 @@ size_t coap_put_option_uri(uint8_t *buf, uint16_t lastonum, const char *uri, uin
         uint8_t *part_start = (uint8_t*)uripos;
 
         while (uri_len--) {
-            if ((*uripos == seperator) || (*uripos == '\0')) {
+            if ((*uripos == separator) || (*uripos == '\0')) {
                 break;
             }
             uripos++;
