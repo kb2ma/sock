@@ -317,7 +317,9 @@ size_t coap_put_option_uri(uint8_t *buf, uint16_t lastonum, const char *uri, uin
 {
     char separator = (optnum == COAP_OPT_URI_PATH) ? '/' : '&';
     size_t uri_len = strlen(uri);
-    assert(uri_len);
+    if (uri_len == 0) {
+        return 0;
+    }
 
     uint8_t *bufpos = buf;
     char *uripos = (char*)uri;
