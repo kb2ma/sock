@@ -174,6 +174,7 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
             switch(sock->family) {
                 case AF_INET6:
                     ipv6_v6only = 1;
+                    /* Falls through. */
                 case 0:
                     setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
             }
