@@ -22,9 +22,3 @@ Update it using
 Some of the applications have a Makefile, just go into their directory and run
 
     # make
-
-There's also a set of [pyjam](https://github.com/kaspar030/pyjam) buildfiles.
-
-If you've got pyjam installed, use them like this:
-
-    # pyj -a
