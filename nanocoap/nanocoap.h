@@ -2,10 +2,15 @@
 #define NANOCOAP_H
 
 #include <assert.h>
-#include <arpa/inet.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#ifdef RIOT_VERSION
+#include "byteorder.h"
+#else
+#include <arpa/inet.h>
+#endif
 
 #define COAP_PORT               (5683)
 #define NANOCOAP_URL_MAX        (64)
