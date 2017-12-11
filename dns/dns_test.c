@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "sock_dns.h"
+#include "net/sock/dns.h"
 
 sock_udp_ep_t sock_dns_server = { .family=AF_INET, .port=SOCK_DNS_PORT,
                                   .addr.ipv4={8,8,8,8}

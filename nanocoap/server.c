@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#include "nanocoap.h"
-#include "nanocoap_sock.h"
+#include "net/nanocoap.h"
+#include "net/nanocoap_sock.h"
 #include "net/sock/udp.h"
 
 #define COAP_INBUF_SIZE (256U)

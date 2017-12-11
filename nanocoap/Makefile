@@ -1,12 +1,13 @@
 all: bin/nanocoap_client bin/nanocoap_server
 
 CFLAGS += -g -Os -Wall -Wextra -pedantic -std=c11
-CFLAGS += -I../include -I../riot/sys/include -I../src/posix
+CFLAGS += -I../include -I../riot/sys/include -I../src/posix/include
 
 CFLAGS += -DSOCK_HAS_IPV4 -DSOCK_HAS_IPV6 -DLINUX -D_DEFAULT_SOURCE
 
-SHARED_SRC=nanocoap.c handler.c nanocoap_sock.c ../src/util.c ../src/posix/posix.c
-CLIENT_SRC=client.c nanocoap_sock.c $(SHARED_SRC)
+RIOT_SOCK=../riot/sys/net/application_layer/nanocoap
+SHARED_SRC=${RIOT_SOCK}/nanocoap.c ${RIOT_SOCK}/sock.c ../riot/sys/net/sock/sock_util.c ../src/posix/posix.c handler.c
+CLIENT_SRC=client.c $(SHARED_SRC)
 SERVER_SRC=server.c $(SHARED_SRC)
 
 bin/:

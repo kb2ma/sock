@@ -40,7 +40,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const sock_udp_ep_t *endpoint)
     assert(endpoint);
 
     switch(endpoint->family) {
-#if defined(SOCK_HAS_IPV4)
+#if SOCK_HAS_IPV4
         case AF_INET:
             {
                 struct sockaddr_in *dst_addr = sockaddr;
@@ -55,7 +55,7 @@ static int _endpoint_to_sockaddr(void *sockaddr, const sock_udp_ep_t *endpoint)
                 return 0;
             }
 #endif
-#if defined(SOCK_HAS_IPV6)
+#if SOCK_HAS_IPV6
         case 0:
         case AF_INET6:
             {
@@ -84,7 +84,7 @@ static int _sockaddr_to_endpoint(sock_udp_ep_t *endpoint, void *_sockaddr)
 
     struct sockaddr *sockaddr = _sockaddr;
     switch(sockaddr->sa_family) {
-#if defined(SOCK_HAS_IPV4)
+#if SOCK_HAS_IPV4
         case AF_INET:
             {
                 struct sockaddr_in *addr = (struct sockaddr_in*) sockaddr;
@@ -94,7 +94,7 @@ static int _sockaddr_to_endpoint(sock_udp_ep_t *endpoint, void *_sockaddr)
                 return 0;
             }
 #endif
-#if defined(SOCK_HAS_IPV6)
+#if SOCK_HAS_IPV6
         case AF_INET6:
             {
                 sockaddr_t *addr = (sockaddr_t*) sockaddr;
@@ -144,11 +144,11 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
         sock->family = remote->family;
     }
 
-#if defined(SOCK_HAS_IPV6)
-    if (!sock->family) {
-        sock->family = AF_INET6;
+    if (SOCK_HAS_IPV6) {
+        if (!sock->family) {
+            sock->family = AF_INET6;
+        }
     }
-#endif
 
     sock->fd = socket(sock->family, SOCK_DGRAM, IPPROTO_IP);
     if (sock->fd == -1) {
@@ -169,16 +169,16 @@ int sock_udp_create(sock_udp_t *sock, const sock_udp_ep_t *local, const sock_udp
             setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
             setsockopt(sock->fd, SOL_IP, IP_TRANSPARENT, &on, sizeof(on));
 
-#if defined(SOCK_HAS_IPV6)
-            int ipv6_v6only = 0;
-            switch(sock->family) {
-                case AF_INET6:
-                    ipv6_v6only = 1;
-                    /* Falls through. */
-                case 0:
-                    setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
+            if (SOCK_HAS_IPV6) {
+                int ipv6_v6only = 0;
+                switch(sock->family) {
+                    case AF_INET6:
+                        ipv6_v6only = 1;
+                        /* Falls through. */
+                    case 0:
+                        setsockopt(sock->fd, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6_v6only, sizeof(ipv6_v6only));
+                }
             }
-#endif
 
             if (bind(sock->fd, (struct sockaddr *)&local_addr, addr_len) == -1) {
                 res = -1;
@@ -266,19 +266,19 @@ static int _set_remote(sock_udp_t *sock, const sock_udp_ep_t *dst)
         return -EINVAL;
     }*/
 
-#if defined(SOCK_HAS_IPV4)
-    if (dst->family == AF_INET) {
-        if  (dst->addr.ipv4_u32 == 0xFFFFFFFF) {
-            int enable = 1;
-            if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) == -1) {
-                perror("enabling broadcast");
+    if (SOCK_HAS_IPV4) {
+        if (dst->family == AF_INET) {
+            if  (dst->addr.ipv4_u32 == 0xFFFFFFFF) {
+                int enable = 1;
+                if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable)) == -1) {
+                    perror("enabling broadcast");
+                }
             }
-        }
 
-        /* if an interface is specified, force it's usage. */
-        _bind_to_device(sock->fd, dst->netif);
+            /* if an interface is specified, force it's usage. */
+            _bind_to_device(sock->fd, dst->netif);
+        }
     }
-#endif
 
     memset((void*)&sock->peer, '\0', sizeof(sockaddr_t));
     _endpoint_to_sockaddr(&sock->peer, dst);

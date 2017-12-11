@@ -9,8 +9,8 @@
 #include "net/sock/udp.h"
 #include "net/sock/util.h"
 
-#include "nanocoap.h"
-#include "nanocoap_sock.h"
+#include "net/nanocoap.h"
+#include "net/nanocoap_sock.h"
 
 int main(int argc, char *argv[])
 {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    res = sock_str2ep(&remote, hostport);
+    res = sock_udp_str2ep(&remote, hostport);
     if (res) {
         return 1;
     }

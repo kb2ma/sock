@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "nanocoap.h"
+#include "net/nanocoap.h"
 
 ssize_t _test_handler(coap_pkt_t* pkt, uint8_t *buf, size_t len)
 {
